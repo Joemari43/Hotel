@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Harborview Hotel | Coastal Luxury Redefined</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar__inner">
+        <a class="brand" href="/hotel">Harborview Hotel</a>
+        <nav class="topbar__nav">
+          <a href="/hotel" class="is-active">About</a>
+          <a href="/rooms">Rooms</a>
+          <a href="/order">Order</a>
+          <a href="/service">Service</a>
+          <a href="/admin">Staff Portal</a>
+          <a href="/book#booking">Book Now</a>
+        </nav>
+      </div>
+    </header>
+
+    <section class="hotel-hero">
+      <div class="hotel-hero__overlay"></div>
+      <div class="hotel-hero__content">
+        <span class="hero-kicker">Harborview • Pacific Grove</span>
+        <h1>Where the Pacific tide meets tailored hospitality.</h1>
+        <p>
+          Cushion-soft suites, salt-air terraces, and a team that knows your name by sunset—Harborview
+          transforms coastal breaks into signature stories you will replay all year.
+        </p>
+        <div class="hero-actions">
+          <a class="primary-btn" href="/book#booking">Plan your stay</a>
+          <a class="secondary-link" href="#experiences">Discover the experience</a>
+        </div>
+      </div>
+    </section>
+
+    <main class="hotel-main">
+      <section id="experiences" class="experience-grid">
+        <article>
+          <h2>Experience Harborview’s signature rhythm</h2>
+          <p>
+            Dawn breaks over Monterey Bay, pour-over coffee arrives exactly how you like it, and your
+            suite is staged for the mood you selected in the app. From there, our team orchestrates
+            wellness, dining, and adventure that feel personal—never prescriptive.
+          </p>
+        </article>
+        <div class="experience-card">
+          <h3>Blue Current Wellness Club</h3>
+          <p>
+            Begin with peloton ocean rides, reset in our cedar sauna, and exhale with jasmine-salt
+            body rituals designed by our resident therapists.
+          </p>
+          <span>Daily programming • Spa pass included</span>
+        </div>
+        <div class="experience-card">
+          <h3>Bay & Bounty Dining</h3>
+          <p>
+            Chef Lucía Rivera crafts seven-course tastings featuring Dungeness crab, citrus, and
+            wind-cooled chardonnays poured by our sommelier collective.
+          </p>
+          <span>Seatings Thursday–Sunday</span>
+        </div>
+        <div class="experience-card">
+          <h3>Navigator Concierge Studio</h3>
+          <p>
+            Charter a vintage sailboat at golden hour or secure a private gallery viewing—our
+            round-the-clock navigator team makes every itinerary effortless.
+          </p>
+          <span>On-call 24/7</span>
+        </div>
+      </section>
+
+      <section class="signature-highlights">
+        <header>
+          <h2>Signature touches that define Harborview</h2>
+          <p>
+            Elevated, coastal, and distinctly personal—these hallmarks shape every stay and keep our
+            guests returning season after season.
+          </p>
+        </header>
+        <div class="highlight-list">
+          <article>
+            <h3>Harborlight Panorama Lounge</h3>
+            <p>
+              A glasshouse atrium cantilevered over the pier with live vinyl sessions, cold-brew
+              negronis, and telescope hosts guiding guests through the constellations.
+            </p>
+          </article>
+          <article>
+            <h3>Atelier Collaborations</h3>
+            <p>
+              Weekly salons with ceramicists, perfumers, and musicians-in-residence invite you behind
+              the scenes—and often home with limited-edition pieces.
+            </p>
+          </article>
+          <article>
+            <h3>Seamless Arrival</h3>
+            <p>
+              Customize lighting, scent, playlists, and minibar before you arrive. Your room recognizes
+              your profile the minute you tap the key.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="testimonial-carousel">
+        <header>
+          <h2>Voices from the harbor</h2>
+          <p>Guests share the moments that made their Harborview escape unforgettable.</p>
+        </header>
+        <div class="testimonial-track">
+          <figure>
+            <blockquote>
+              “We arrived late and still felt like the only guests. Aromatherapy was already set, playlists
+              matched our mood board, and the harbor sunrise tour was the best start to a weekend I can
+              remember.”
+            </blockquote>
+            <figcaption>— Sienna & Vaughn, Los Angeles</figcaption>
+          </figure>
+          <figure>
+            <blockquote>
+              “The Harborlight tasting menu rivaled Michelin rooms we’ve dined in abroad. Fresh abalone,
+              perfect wine pairings, and a sommelier who shared the stories behind every pour.”
+            </blockquote>
+            <figcaption>— Malik, Chicago</figcaption>
+          </figure>
+          <figure>
+            <blockquote>
+              “Check-in took thirty seconds and the concierge texted hidden cove spots before we even
+              asked. Harborview is now our default ‘we need to breathe’ escape.”
+            </blockquote>
+            <figcaption>— Priya, Vancouver</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="cta-banner">
+        <div class="cta-banner__content">
+          <h2>Your ocean-view retreat is a few clicks away.</h2>
+          <p>
+            Choose your dates, verify instantly, and we’ll tailor every detail before you arrive. The
+            coastline is calling.
+          </p>
+        </div>
+        <a class="primary-btn" href="/book#booking">Reserve now</a>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; <span id="year"></span> Harborview Hotel. All rights reserved.</p>
+      <p>Questions? Email <a href="mailto:stay@harborview.example">stay@harborview.example</a></p>
+    </footer>
+
+    <script>
+      document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+  </body>
+</html>

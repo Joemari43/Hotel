@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Harborview Hotel | In-Room Dining & Services</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar__inner">
+        <a class="brand" href="/hotel">Harborview Hotel</a>
+        <nav class="topbar__nav">
+          <a href="/hotel">About</a>
+          <a href="/rooms">Rooms</a>
+          <a href="/order" class="is-active">Order</a>
+          <a href="/service">Service</a>
+          <a href="/admin">Staff Portal</a>
+          <a href="/book#booking">Book Now</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container order-container">
+      <section class="booking-card order-card">
+        <div class="order-card__intro">
+          <h1>In-Room Dining & Amenities</h1>
+          <p>
+            Send food and amenity requests straight to the Harborview service team. Tell us what you
+            need and we&rsquo;ll confirm once it&rsquo;s on the way.
+          </p>
+        </div>
+
+        <form id="order-form" class="order-form" novalidate>
+          <div class="form-grid">
+            <label class="form-field">
+              <span>Full name*</span>
+              <input type="text" id="order-full-name" name="fullName" maxlength="120" required />
+            </label>
+
+            <label class="form-field">
+              <span>Email address*</span>
+              <input type="email" id="order-email" name="email" maxlength="120" required />
+            </label>
+
+            <label class="form-field">
+              <span>Phone number*</span>
+              <input
+                type="tel"
+                id="order-phone"
+                name="phone"
+                maxlength="40"
+                placeholder="e.g. +63 917 555 0101"
+                required
+              />
+            </label>
+
+            <label class="form-field">
+              <span>Room number*</span>
+              <select id="order-room" name="roomNumber" required>
+                <option value="">Loading rooms…</option>
+              </select>
+            </label>
+
+            <label class="form-field">
+              <span>Request type*</span>
+              <select id="order-type" name="orderType" required>
+                <option value="">Choose an option</option>
+                <option value="food">Food &amp; Beverage</option>
+                <option value="amenity">Amenities</option>
+                <option value="housekeeping">Housekeeping</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="spa">Spa &amp; Wellness</option>
+                <option value="other">Something else</option>
+              </select>
+            </label>
+
+            <label class="form-field">
+              <span>Preferred delivery time</span>
+              <input type="datetime-local" id="requested-for" name="requestedFor" />
+            </label>
+          </div>
+
+          <section class="order-items">
+            <div class="order-items__header">
+              <div class="order-items__intro">
+                <h2>Add your items</h2>
+                <p class="text-muted" id="order-items-help">
+                  Enter each dish, drink, or amenity and add it to the list. You can also describe your
+                  request in your own words.
+                </p>
+              </div>
+              <button type="button" class="secondary-btn order-menu-btn is-hidden" id="order-menu-btn">
+                Browse menu
+              </button>
+            </div>
+            <div class="order-item-fields">
+              <label class="form-field">
+                <span>Item</span>
+                <input type="text" id="item-name-input" placeholder="e.g. Club Sandwich" />
+              </label>
+              <label class="form-field">
+                <span>Qty</span>
+                <input
+                  type="number"
+                  id="item-quantity-input"
+                  min="1"
+                  max="99"
+                  value="1"
+                  inputmode="numeric"
+                />
+              </label>
+              <label class="form-field">
+                <span>Notes</span>
+                <input
+                  type="text"
+                  id="item-notes-input"
+                  placeholder="No onions, warm towels, etc."
+                />
+              </label>
+              <button type="button" id="add-item-btn" class="secondary-btn order-add-btn">
+                Add item
+              </button>
+            </div>
+
+            <ul id="order-items-list" class="order-items__list" aria-live="polite"></ul>
+
+            <label class="form-field">
+              <span>Describe your request</span>
+              <textarea
+                id="order-items-text"
+                name="itemsText"
+                rows="3"
+                placeholder="Example: Continental breakfast for 2, extra pillows, and fresh towels."
+              ></textarea>
+            </label>
+          </section>
+
+          <label class="form-field">
+            <span>Special instructions</span>
+            <textarea
+              id="order-notes"
+              name="specialInstructions"
+              rows="3"
+              placeholder="Allergies, delivery details, or additional instructions."
+            ></textarea>
+          </label>
+
+          <div id="order-feedback" class="form-feedback" aria-live="polite"></div>
+
+          <button type="submit" class="primary-btn">Send to Service Team</button>
+        </form>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer__inner">
+        <div>
+          <strong>Harborview Hotel</strong>
+          <p class="text-muted">Sunrise Cove, The Esplanade, Barangay Mabini, Batangas</p>
+        </div>
+        <div>
+          <strong>Front Desk</strong>
+          <p class="text-muted">+63 917 555 0110</p>
+          <p class="text-muted">stay@harborview.ph</p>
+        </div>
+        <div>
+          <strong>Dining &amp; Services</strong>
+          <p class="text-muted">Press 2 on your in-room phone or message concierge in the app.</p>
+        </div>
+      </div>
+      <p class="footer__copy">&copy; <span id="order-year"></span> Harborview Hospitality Inc.</p>
+    </footer>
+
+    <script src="order.js" defer></script>
+  </body>
+</html>

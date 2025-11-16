@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Harborview Hotel | Rooms & Suites</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar__inner">
+        <a class="brand" href="/hotel">Harborview Hotel</a>
+        <nav class="topbar__nav">
+          <a href="/hotel">About</a>
+          <a href="/rooms" class="is-active">Rooms</a>
+          <a href="/order">Order</a>
+          <a href="/service">Service</a>
+          <a href="/admin">Staff Portal</a>
+          <a href="/book#booking">Book Now</a>
+        </nav>
+      </div>
+    </header>
+
+    <section class="rooms-hero">
+      <div class="rooms-hero__content">
+        <h1>Suites scripted for sea lovers.</h1>
+        <p>
+          Harborview rooms blend signature design with Monterey Bay’s natural drama—select the vibe,
+          we’ll stage the rest before you arrive.
+        </p>
+      </div>
+    </section>
+
+    <main class="rooms-container">
+      <header class="rooms-header">
+        <h2>Choose your Harborview hideaway</h2>
+        <p>
+          Thoughtful lighting, custom scents, and curated minibars come standard. Select the suite that
+          speaks to your stay, then finalize in under a minute with our secure, code-verified booking.
+        </p>
+      </header>
+
+      <section class="rooms-grid" id="rooms-grid"></section>
+      <p id="rooms-error" class="rooms-error" aria-live="polite"></p>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; <span id="year"></span> Harborview Hotel. All rights reserved.</p>
+      <p>Questions? Email <a href="mailto:stay@harborview.example">stay@harborview.example</a></p>
+    </footer>
+
+    <script src="rooms.js" defer></script>
+  </body>
+</html>

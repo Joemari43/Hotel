@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Harborview Admin Portal</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="admin.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar__inner">
+        <a class="brand" href="/hotel">Harborview Hotel</a>
+        <nav class="topbar__nav">
+          <a href="/hotel">About</a>
+          <a href="/rooms">Rooms</a>
+          <a href="/order">Order</a>
+          <a href="/service">Service</a>
+          <a href="/book#booking">Book Now</a>
+          <a href="/admin" class="is-active">Staff Portal</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="admin-container">
+      <section id="login-panel" class="admin-card">
+        <div>
+          <h1>Staff &amp; Owner Portal</h1>
+          <p>Log in with your Harborview credentials to manage bookings and monitor reservations.</p>
+        </div>
+        <form id="login-form" class="admin-form">
+          <div class="admin-grid">
+            <label>
+              <span>Username</span>
+              <input type="text" name="username" id="login-username" autocomplete="username" required />
+            </label>
+            <label>
+              <span>Password</span>
+              <input
+                type="password"
+                name="password"
+                id="login-password"
+                autocomplete="current-password"
+                required
+              />
+            </label>
+          </div>
+          <button type="submit" class="primary-btn">Sign In</button>
+          <p class="text-muted">
+            Need access? Contact the hotel manager to receive your staff or owner credentials.
+          </p>
+          <div id="login-feedback" class="admin-feedback" aria-live="polite"></div>
+        </form>
+      </section>
+
+      <section id="dashboard" class="admin-card is-hidden" aria-live="polite">
+        <div class="admin-header">
+          <div>
+            <h1 id="dashboard-heading">Staff Dashboard</h1>
+            <p id="dashboard-subtitle">
+              Review reservations, capture walk-in bookings, and keep departures on schedule.
+            </p>
+            <div class="role-pill">
+              Signed in as <span id="welcome-name"></span> · <span id="role-badge"></span>
+            </div>
+          </div>
+          <div class="admin-actions">
+            <button type="button" id="refresh-btn" class="secondary-btn">Refresh data</button>
+            <button type="button" id="logout-btn" class="secondary-btn">Log out</button>
+          </div>
+        </div>
+
+        <section id="owner-overview" class="admin-subcard is-hidden">
+          <h2>Owner overview</h2>
+          <div class="owner-metrics">
+            <div class="metric-card">
+              <strong>Total bookings</strong>
+              <p id="stat-total-bookings">0</p>
+            </div>
+            <div class="metric-card">
+              <strong>Available rooms</strong>
+              <p id="stat-available-rooms">0</p>
+            </div>
+            <div class="metric-card">
+              <strong>Checked-in guests</strong>
+              <p id="stat-checked-in">0</p>
+            </div>
+            <div class="metric-card">
+              <strong>Checked-out today</strong>
+              <p id="stat-checked-out">0</p>
+            </div>
+            <div class="metric-card">
+              <strong>Walk-ins</strong>
+              <p id="stat-walk-ins">0</p>
+            </div>
+            <div class="metric-card">
+              <strong>Online reservations</strong>
+              <p id="stat-online-reservations">0</p>
+            </div>
+          </div>
+          <div class="owner-flex">
+            <div class="sales-card">
+              <div class="sales-card-header">
+                <h3>Sales summary</h3>
+                <div class="sales-filter-group" role="group" aria-label="Select sales period">
+                  <button type="button" class="sales-filter-btn is-active" data-sales-window="daily" aria-pressed="true">
+                    Daily
+                  </button>
+                  <button type="button" class="sales-filter-btn" data-sales-window="weekly" aria-pressed="false">
+                    Weekly
+                  </button>
+                  <button type="button" class="sales-filter-btn" data-sales-window="monthly" aria-pressed="false">
+                    Monthly
+                  </button>
+                  <button type="button" class="sales-filter-btn" data-sales-window="yearly" aria-pressed="false">
+                    Yearly
+                  </button>
+                </div>
+              </div>
+              <div class="sales-highlight">
+                <div class="sales-highlight-copy">
+                  <span id="sales-selected-label">Daily sales</span>
+                  <p id="sales-selected-range" class="sales-range-text">Last 24 hours</p>
+                  <p id="sales-status-text" class="sales-status-text">Waiting for data...</p>
+                </div>
+                <strong id="sales-selected-total">PHP 0.00</strong>
+              </div>
+              <div class="sales-grid">
+                <div>
+                  <span>Daily</span>
+                  <strong id="stat-sales-daily">PHP 0.00</strong>
+                </div>
+                <div>
+                  <span>Weekly</span>
+                  <strong id="stat-sales-weekly">PHP 0.00</strong>
+                </div>
+                <div>
+                  <span>Monthly</span>
+                  <strong id="stat-sales-monthly">PHP 0.00</strong>
+                </div>
+                <div>
+                  <span>Yearly</span>
+                  <strong id="stat-sales-yearly">PHP 0.00</strong>
+                </div>
+              </div>
+            </div>
+            <div class="availability-card">
+              <h3>Room availability</h3>
+              <table class="availability-table">
+                <thead>
+                  <tr>
+                    <th>Room type</th>
+                    <th>Total</th>
+                    <th>Occupied</th>
+                    <th>Available</th>
+                    <th>Base rate (PHP)</th>
+                  </tr>
+                </thead>
+                <tbody id="availability-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="room-management" class="admin-subcard is-hidden">
+          <div class="admin-header">
+            <div>
+              <h2>Room management</h2>
+              <p class="text-muted">
+                Add new room types or review existing inventory. Base rates and descriptions are visible to staff and owners.
+              </p>
+            </div>
+          </div>
+          <form id="room-create-form" class="admin-form" autocomplete="off">
+            <div class="admin-grid">
+              <label>
+                <span>Room name*</span>
+                <input type="text" name="name" required />
+              </label>
+              <label>
+                <span>Total rooms*</span>
+                <input type="number" name="totalRooms" min="1" required />
+              </label>
+              <label>
+                <span>Base rate (PHP)</span>
+                <input type="number" name="baseRate" min="0" step="0.01" placeholder="e.g. 9200" />
+              </label>
+              <label>
+                <span>Good for (people)</span>
+                <input type="number" name="sleeps" min="1" placeholder="e.g. 2" />
+              </label>
+            </div>
+            <label>
+              <span>Description</span>
+              <textarea name="description" rows="2" placeholder="Short blurb that appears on the deck and brochure."></textarea>
+            </label>
+            <label>
+              <span>Tagline</span>
+              <input type="text" name="brochureUrl" placeholder="Optional headline (e.g. Perfect for couples)" />
+            </label>
+            <label>
+              <span>Image URL</span>
+              <input type="url" name="imageUrl" placeholder="https://..." />
+            </label>
+            <button type="submit" class="primary-btn">Add room type</button>
+            <div id="room-create-feedback" class="admin-feedback" aria-live="polite"></div>
+          </form>
+
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Total rooms</th>
+                  <th>Sleeps</th>
+                  <th>Base rate (PHP)</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody id="room-management-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="admin-subcard">
+          <h2>Record a direct booking</h2>
+          <p>
+            Use this form for phone and walk-in reservations. Down payment must be at least
+            <strong>PHP <span id="admin-min-deposit">0.00</span></strong>.
+          </p>
+          <form id="direct-booking-form" class="admin-form">
+            <div class="admin-grid">
+              <label>
+                <span>Full name*</span>
+                <input type="text" name="fullName" required />
+              </label>
+              <label>
+                <span>Email address*</span>
+                <input type="email" name="email" required />
+              </label>
+              <label>
+                <span>Phone number*</span>
+                <input type="tel" name="phone" required />
+              </label>
+              <label>
+                <span>Check-in date*</span>
+                <input type="date" name="checkIn" required />
+              </label>
+              <label>
+                <span>Check-out date*</span>
+                <input type="date" name="checkOut" required />
+              </label>
+              <label>
+                <span>Guests*</span>
+                <input type="number" name="guests" min="1" max="8" required />
+              </label>
+              <label>
+                <span>Room type*</span>
+                <input type="text" name="roomType" required />
+              </label>
+              <label>
+                <span>Payment method*</span>
+                <select name="paymentMethod" required>
+                  <option value="">Select a method</option>
+                  <option value="GCash">GCash</option>
+                  <option value="PayMaya">PayMaya</option>
+                  <option value="Credit Card">Credit Card</option>
+                </select>
+              </label>
+              <label>
+                <span>Payment reference*</span>
+                <input
+                  type="text"
+                  name="paymentReference"
+                  placeholder="GCash Ref No., PayMaya trace ID, or card approval code"
+                  required
+                />
+              </label>
+              <label>
+                <span>Deposit amount (PHP)*</span>
+                <input type="number" name="paymentAmount" min="0" step="0.01" required />
+              </label>
+            </div>
+            <label>
+              <span>Special requests</span>
+              <textarea name="specialRequests" rows="3"></textarea>
+            </label>
+            <button type="submit" class="primary-btn">Save booking</button>
+            <div id="direct-booking-feedback" class="admin-feedback" aria-live="polite"></div>
+          </form>
+        </section>
+
+        <section id="guest-management" class="admin-subcard is-hidden">
+          <div class="admin-header">
+            <div>
+              <h2>Guest profiles</h2>
+              <p class="text-muted">
+                Look up guest contact details, preferences, and booking history for quick assistance.
+              </p>
+            </div>
+          </div>
+          <form id="guest-filter-form" class="admin-filters" aria-label="Search guest profiles">
+            <label>
+              <span>Search guests</span>
+              <input
+                type="search"
+                id="guest-search-input"
+                name="search"
+                placeholder="Name, email, phone, or notes"
+              />
+            </label>
+            <div class="filter-actions">
+              <button type="submit" class="secondary-btn">Search</button>
+              <button type="button" id="guest-filter-reset" class="secondary-btn">Clear</button>
+            </div>
+          </form>
+          <div class="admin-feedback" id="guest-feedback" aria-live="polite"></div>
+          <div class="guest-layout">
+            <div class="guest-directory">
+              <div class="admin-table-wrapper">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Guest</th>
+                      <th>Stay metrics</th>
+                      <th>Next stay</th>
+                    </tr>
+                  </thead>
+                  <tbody id="guest-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="guest-detail-card" id="guest-detail-card">
+              <h3 id="guest-detail-name">Select a guest</h3>
+              <p class="text-muted" id="guest-detail-subtitle">
+                Choose a guest to review their profile and booking history.
+              </p>
+              <div id="guest-detail-status" class="admin-feedback" aria-live="polite"></div>
+              <div class="guest-detail-grid">
+                <div>
+                  <span class="guest-detail-label">Email</span>
+                  <span id="guest-detail-email" class="guest-detail-value">-</span>
+                </div>
+                <div>
+                  <span class="guest-detail-label">Phone</span>
+                  <span id="guest-detail-phone" class="guest-detail-value">-</span>
+                </div>
+                <div>
+                  <span class="guest-detail-label">VIP status</span>
+                  <span id="guest-detail-vip" class="guest-detail-value">Standard</span>
+                </div>
+                <div>
+                  <span class="guest-detail-label">Marketing opt-in</span>
+                  <span id="guest-detail-marketing" class="guest-detail-value">No</span>
+                </div>
+                <div>
+                  <span class="guest-detail-label">Preferred room</span>
+                  <span id="guest-detail-preferred-room" class="guest-detail-value">-</span>
+                </div>
+                <div>
+                  <span class="guest-detail-label">Last room</span>
+                  <span id="guest-detail-last-room" class="guest-detail-value">-</span>
+                </div>
+                <div>
+                  <span class="guest-detail-label">Total stays</span>
+                  <span id="guest-detail-totals" class="guest-detail-value">0 stays · 0 nights</span>
+                </div>
+                <div>
+                  <span class="guest-detail-label">Lifetime value</span>
+                  <span id="guest-detail-lifetime" class="guest-detail-value">PHP 0.00</span>
+                </div>
+                <div>
+                  <span class="guest-detail-label">Last stay</span>
+                  <span id="guest-detail-last-stay" class="guest-detail-value">-</span>
+                </div>
+                <div>
+                  <span class="guest-detail-label">Next stay</span>
+                  <span id="guest-detail-next-stay" class="guest-detail-value">-</span>
+                </div>
+              </div>
+              <div class="guest-notes">
+                <div>
+                  <h4>Notes</h4>
+                  <p id="guest-detail-notes" class="guest-detail-copy text-muted">No notes on file.</p>
+                </div>
+                <div>
+                  <h4>Preferences</h4>
+                  <p id="guest-detail-preferences" class="guest-detail-copy text-muted">
+                    No preferences recorded.
+                  </p>
+                </div>
+              </div>
+              <div class="guest-history">
+                <h4>Upcoming stays</h4>
+                <ul id="guest-upcoming-list" class="guest-history-list"></ul>
+              </div>
+              <div class="guest-history">
+                <h4>Booking history</h4>
+                <ul id="guest-history-list" class="guest-history-list"></ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="billing-management" class="admin-subcard is-hidden">
+          <div class="admin-header">
+            <div>
+              <h2>Billing &amp; payments</h2>
+              <p class="text-muted">
+                Review stay balances, capture payments, and print receipts for guests at checkout.
+              </p>
+            </div>
+          </div>
+          <div class="admin-feedback" id="billing-feedback" aria-live="polite"></div>
+          <div class="admin-table-wrapper">
+            <table class="admin-table billing-table">
+              <thead>
+                <tr>
+                  <th>Guest</th>
+                  <th>Charges</th>
+                  <th>Payments</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="billing-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="service-management" class="admin-subcard is-hidden">
+          <div class="service-header">
+            <div>
+              <h2>Housekeeping &amp; Maintenance</h2>
+              <p class="text-muted">
+                Monitor room readiness, daily cleaning schedules, and maintenance follow-ups in one view.
+              </p>
+            </div>
+            <div class="service-controls" aria-label="Filter housekeeping and maintenance tasks">
+              <label>
+                <span>Type</span>
+                <select id="service-filter-type">
+                  <option value="all">All types</option>
+                  <option value="housekeeping">Housekeeping</option>
+                  <option value="maintenance">Maintenance</option>
+                </select>
+              </label>
+              <label>
+                <span>Status</span>
+                <select id="service-filter-status">
+                  <option value="active">Active only</option>
+                  <option value="all">All statuses</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="in_progress">In progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </label>
+              <label>
+                <span>Readiness</span>
+                <select id="service-filter-readiness">
+                  <option value="all">All rooms</option>
+                  <option value="ready">Ready</option>
+                  <option value="dirty">Dirty</option>
+                  <option value="inspection">Needs inspection</option>
+                  <option value="out_of_service">Out of service</option>
+                </select>
+              </label>
+              <button type="button" class="secondary-btn" id="service-refresh-btn">Refresh</button>
+              <button type="button" class="secondary-btn" id="service-create-toggle" aria-expanded="false">
+                New task
+              </button>
+            </div>
+          </div>
+
+          <div class="service-stats">
+            <div class="service-stat-card">
+              <span>Scheduled</span>
+              <strong id="service-stat-scheduled">0</strong>
+            </div>
+            <div class="service-stat-card">
+              <span>In progress</span>
+              <strong id="service-stat-progress">0</strong>
+            </div>
+            <div class="service-stat-card">
+              <span>Ready rooms</span>
+              <strong id="service-stat-ready">0</strong>
+            </div>
+            <div class="service-stat-card">
+              <span>Out of service</span>
+              <strong id="service-stat-out">0</strong>
+            </div>
+          </div>
+
+          <form id="service-create-form" class="service-create is-hidden">
+            <div class="service-create__grid">
+              <label>
+                <span>Room number*</span>
+                <input type="text" id="service-room-input" maxlength="20" autocomplete="off" required />
+              </label>
+              <label>
+                <span>Task type*</span>
+                <select id="service-type-input" required>
+                  <option value="housekeeping">Housekeeping</option>
+                  <option value="maintenance">Maintenance</option>
+                </select>
+              </label>
+              <label>
+                <span>Priority</span>
+                <select id="service-priority-input">
+                  <option value="normal">Standard</option>
+                  <option value="low">Low</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </label>
+              <label>
+                <span>Scheduled for</span>
+                <input type="datetime-local" id="service-scheduled-input" />
+              </label>
+              <label>
+                <span>Assigned to</span>
+                <input type="text" id="service-assigned-input" maxlength="120" autocomplete="off" />
+              </label>
+              <label>
+                <span>Readiness</span>
+                <select id="service-readiness-input">
+                  <option value="">No change</option>
+                  <option value="ready">Ready</option>
+                  <option value="dirty">Dirty</option>
+                  <option value="inspection">Needs inspection</option>
+                  <option value="out_of_service">Out of service</option>
+                </select>
+              </label>
+            </div>
+            <label class="service-create__title">
+              <span>Task title*</span>
+              <input type="text" id="service-title-input" maxlength="200" required />
+            </label>
+            <label>
+              <span>Details</span>
+              <textarea id="service-details-input" rows="3" maxlength="4000" placeholder="Notes for the team"></textarea>
+            </label>
+            <div class="service-create__actions">
+              <button type="submit" class="primary-btn">Save task</button>
+              <button type="button" class="link-btn" id="service-cancel-create">Cancel</button>
+              <div class="admin-feedback" id="service-create-feedback" aria-live="polite"></div>
+            </div>
+          </form>
+
+          <div class="admin-feedback" id="service-feedback" aria-live="polite"></div>
+
+          <div class="admin-table-wrapper service-table-wrapper">
+            <table class="admin-table service-table">
+              <thead>
+                <tr>
+                  <th>Room</th>
+                  <th>Task details</th>
+                  <th>Assignment</th>
+                  <th>Controls</th>
+                </tr>
+              </thead>
+              <tbody id="service-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="order-management" class="admin-subcard is-hidden">
+          <div class="admin-header">
+            <div>
+              <h2>Service requests</h2>
+              <p class="text-muted">
+                Track food, beverage, and amenity orders placed by guests. Update the status so the right
+                crew knows when to step in.
+              </p>
+            </div>
+          </div>
+          <div class="admin-filters order-filter-group" aria-label="Filter service orders">
+            <label>
+              <span>Status</span>
+              <select id="order-status-filter">
+                <option value="active">Active only</option>
+                <option value="all">All statuses</option>
+                <option value="pending">Pending</option>
+                <option value="acknowledged">Acknowledged</option>
+                <option value="in_progress">In progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </label>
+            <label>
+              <span>Department</span>
+              <select id="order-department-filter">
+                <option value="">All teams</option>
+                <option value="restaurant">Restaurant</option>
+                <option value="guest_services">Guest services</option>
+                <option value="housekeeping">Housekeeping</option>
+                <option value="engineering">Engineering</option>
+                <option value="spa">Spa</option>
+              </select>
+            </label>
+          </div>
+          <div class="admin-feedback" id="orders-feedback" aria-live="polite"></div>
+          <div class="admin-table-wrapper">
+            <table class="admin-table order-table">
+              <thead>
+                <tr>
+                  <th>Placed</th>
+                  <th>Guest</th>
+                  <th>Request</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="order-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="reservations-section" class="admin-subcard">
+          <div class="admin-header">
+            <h2>Reservations</h2>
+            <p class="text-muted">
+              Includes both online and direct bookings. Use the checkout button when a guest departs.
+            </p>
+          </div>
+          <form id="booking-filter-form" class="admin-filters" aria-label="Filter reservations by check-in date">
+            <label>
+              <span>Check-in from</span>
+              <input type="date" id="booking-filter-start" name="startDate" />
+            </label>
+            <label>
+              <span>Check-in to</span>
+              <input type="date" id="booking-filter-end" name="endDate" />
+            </label>
+            <div class="filter-actions">
+              <button type="submit" class="secondary-btn">Apply filter</button>
+              <button type="button" id="booking-filter-reset" class="secondary-btn">Clear</button>
+            </div>
+          </form>
+          <div class="admin-feedback" id="reservations-feedback" aria-live="polite"></div>
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Guest</th>
+                  <th>Stay</th>
+                  <th>Room</th>
+                  <th>Payment</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="booking-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="admin.js" defer></script>
+  </body>
+</html>

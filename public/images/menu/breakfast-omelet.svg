@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320">
+  <defs>
+    <linearGradient id="omeletBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0f2f1" />
+      <stop offset="100%" stop-color="#c0e5e0" />
+    </linearGradient>
+  </defs>
+  <rect width="480" height="320" fill="url(#omeletBg)" />
+  <g opacity="0.25" fill="#91cdc4">
+    <circle cx="420" cy="70" r="90" />
+    <circle cx="120" cy="300" r="130" />
+  </g>
+  <g transform="translate(80 60)">
+    <ellipse cx="160" cy="196" rx="160" ry="48" fill="#6fa99d" opacity="0.35" />
+    <ellipse cx="160" cy="146" rx="140" ry="58" fill="#f8f4ec" stroke="#d8ddd7" stroke-width="8" />
+    <path
+      d="M52 100c40-58 170-68 216 0 32 48-38 82-96 80-80-3-144-38-120-80z"
+      fill="#f4d05a"
+      stroke="#f1ba44"
+      stroke-width="8"
+    />
+    <path
+      d="M136 96c8-16 32-28 52-26 20 4 30 20 12 40-12 12-44 16-64 14 0 0-12-10 0-28z"
+      fill="#f7e995"
+      opacity="0.85"
+    />
+    <g fill="#4fa072">
+      <circle cx="210" cy="126" r="10" />
+      <circle cx="176" cy="106" r="8" />
+      <circle cx="156" cy="132" r="9" />
+      <circle cx="220" cy="150" r="7" />
+    </g>
+    <g fill="#d95b49">
+      <path d="M120 150c10-10 24-10 30 0-4 8-14 14-30 0z" />
+      <path d="M180 164c12-8 26-6 32 4-6 6-16 8-32-4z" />
+    </g>
+  </g>
+  <text
+    x="38"
+    y="60"
+    font-family="'Inter', Arial, sans-serif"
+    font-size="24"
+    font-weight="600"
+    fill="#2f6f64"
+  >
+    Sunrise Omelet
+  </text>
+</svg>

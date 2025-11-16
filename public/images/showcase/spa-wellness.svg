@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 720">
+  <defs>
+    <linearGradient id="spaBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0c3f3a" />
+      <stop offset="100%" stop-color="#145d50" />
+    </linearGradient>
+    <radialGradient id="spaLight" cx="40%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#b2f5ea" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#b2f5ea" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="stoneGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#5f6f74" />
+      <stop offset="100%" stop-color="#2f3b40" />
+    </linearGradient>
+    <linearGradient id="towelGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f7f9fb" />
+      <stop offset="100%" stop-color="#cbd5e1" />
+    </linearGradient>
+    <linearGradient id="waterGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.75" />
+      <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.55" />
+    </linearGradient>
+  </defs>
+  <rect width="960" height="720" fill="url(#spaBg)" />
+  <circle cx="360" cy="200" r="280" fill="url(#spaLight)" opacity="0.8" />
+  <g opacity="0.25">
+    <circle cx="820" cy="520" r="220" fill="#083f35" />
+    <circle cx="120" cy="640" r="180" fill="#052923" />
+  </g>
+  <g transform="translate(200 200)">
+    <ellipse cx="320" cy="380" rx="260" ry="70" fill="#041c19" opacity="0.45" />
+    <path
+      d="M120 240h400v100c0 44-80 80-200 80s-200-36-200-80z"
+      fill="url(#waterGradient)"
+      opacity="0.8"
+    />
+    <path
+      d="M160 240c30-80 110-140 160-140s130 60 160 140H160z"
+      fill="#cffafe"
+      opacity="0.35"
+    />
+    <g transform="translate(200 80)">
+      <ellipse cx="0" cy="180" rx="70" ry="36" fill="url(#stoneGradient)" opacity="0.65" />
+      <ellipse cx="80" cy="170" rx="78" ry="40" fill="url(#stoneGradient)" />
+      <ellipse cx="160" cy="190" rx="70" ry="34" fill="url(#stoneGradient)" opacity="0.75" />
+      <ellipse cx="120" cy="132" rx="90" ry="42" fill="url(#stoneGradient)" opacity="0.85" />
+    </g>
+    <rect
+      x="220"
+      y="80"
+      width="200"
+      height="110"
+      rx="20"
+      fill="url(#towelGradient)"
+      opacity="0.9"
+    />
+    <path
+      d="M220 120h200v28H220z"
+      fill="#94a3b8"
+      opacity="0.35"
+    />
+    <rect
+      x="280"
+      y="60"
+      width="80"
+      height="40"
+      rx="16"
+      fill="#facc15"
+      opacity="0.75"
+    />
+    <circle cx="420" cy="96" r="28" fill="#f9a8d4" opacity="0.75" />
+    <circle cx="196" cy="96" r="28" fill="#fbbf24" opacity="0.75" />
+  </g>
+  <g transform="translate(560 200)">
+    <rect x="0" y="0" width="320" height="360" rx="48" fill="rgba(255, 255, 255, 0.08)" />
+    <text
+      x="50"
+      y="70"
+      font-family="'Inter', Arial, sans-serif"
+      font-size="42"
+      font-weight="700"
+      fill="#ecfeff"
+    >
+      Serenity Spa
+    </text>
+    <line x1="48" y1="90" x2="272" y2="90" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" />
+    <text
+      x="50"
+      y="140"
+      font-family="'Inter', Arial, sans-serif"
+      font-size="20"
+      fill="#ecfeff"
+      opacity="0.85"
+    >
+      •   Ocean Stone Massage
+    </text>
+    <text
+      x="50"
+      y="182"
+      font-family="'Inter', Arial, sans-serif"
+      font-size="20"
+      fill="#ecfeff"
+      opacity="0.85"
+    >
+      •   Citrus Glow Body Polish
+    </text>
+    <text
+      x="50"
+      y="224"
+      font-family="'Inter', Arial, sans-serif"
+      font-size="20"
+      fill="#ecfeff"
+      opacity="0.85"
+    >
+      •   Bamboo Serenity Facial
+    </text>
+    <text
+      x="50"
+      y="266"
+      font-family="'Inter', Arial, sans-serif"
+      font-size="20"
+      fill="#ecfeff"
+      opacity="0.85"
+    >
+      •   Aromatherapy Sleep Ritual
+    </text>
+    <rect
+      x="80"
+      y="300"
+      width="160"
+      height="44"
+      rx="22"
+      fill="rgba(34, 211, 238, 0.85)"
+    />
+    <text
+      x="160"
+      y="330"
+      font-family="'Inter', Arial, sans-serif"
+      font-size="18"
+      font-weight="600"
+      fill="#0f172a"
+      text-anchor="middle"
+    >
+      Reserve a Treatment
+    </text>
+  </g>
+  <g fill="#ecfeff" font-family="'Inter', Arial, sans-serif">
+    <text x="120" y="120" font-size="52" font-weight="700">
+      Wellness &amp; Amenities Experience
+    </text>
+    <text x="120" y="170" font-size="24" opacity="0.85">
+      Spa-ready visuals for premium add-on packages.
+    </text>
+  </g>
+</svg>

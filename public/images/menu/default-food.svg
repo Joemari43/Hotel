@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+  <defs>
+    <linearGradient id="foodGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#145da0" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0c3f6c" stop-opacity="0.9" />
+    </linearGradient>
+  </defs>
+  <rect width="600" height="400" fill="url(#foodGradient)" />
+  <g fill="#f7f9fb" font-family="'Inter', Arial, sans-serif" text-anchor="middle">
+    <text x="300" y="195" font-size="42" font-weight="600">Food &amp; Beverage</text>
+    <text x="300" y="240" font-size="20" opacity="0.8">Preview not available</text>
+  </g>
+</svg>

@@ -1,0 +1,1595 @@
+const express = require('express');
+const path = require('path');
+const cors = require('cors');
+const nodemailer = require('nodemailer');
+const dotenv = require('dotenv');
+const sql = require('mssql');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+dotenv.config();
+
+const app = express();
+const PORT = Number(process.env.PORT || 3000);
+const ROOT_DIR = __dirname;
+
+const { connectionConfig, connectionLabel } = buildSqlConfig();
+const connectionPool = new sql.ConnectionPool(connectionConfig);
+const poolConnect = connectionPool
+  .connect()
+  .then(async (pool) => {
+    console.log(`Connected to SQL Server ${connectionLabel}`);
+    await ensureTables(pool);
+    await verifyRequiredTables(pool);
+    await ensureRoomTypes(pool);
+    await ensureDefaultUsers(pool);
+    await refreshSalesSummaryCache(pool);
+    return pool;
+  })
+  .catch((error) => {
+    console.error('Failed to connect to SQL Server', error);
+    process.exit(1);
+  });
+
+const transporter = createTransporter();
+
+app.use(cors());
+app.use(express.json());
+app.use(
+  express.static(path.join(ROOT_DIR, '..', 'public'), {
+    index: false,
+  })
+);
+
+const MINIMUM_DEPOSIT =
+  Number.isNaN(Number(process.env.MINIMUM_DEPOSIT))
+    ? 2000
+    : Number(process.env.MINIMUM_DEPOSIT);
+
+const DEFAULT_ROOM_TYPES = [
+  {
+    name: 'Deluxe King',
+    totalRooms: Number(process.env.ROOMS_DELUXE_KING || 10),
+    baseRate: 9200,
+    description: 'Spacious king room with premium bedding and city skyline view.',
+  },
+  {
+    name: 'Twin Suite',
+    totalRooms: Number(process.env.ROOMS_TWIN_SUITE || 8),
+    baseRate: 8400,
+    description: 'Flexible twin-bed suite perfect for friends or small families.',
+  },
+  {
+    name: 'Ocean View Loft',
+    totalRooms: Number(process.env.ROOMS_OCEAN_VIEW_LOFT || 4),
+    baseRate: 12500,
+    description: 'Two-story loft overlooking the bay with private balcony.',
+  },
+  {
+    name: 'Garden Retreat',
+    totalRooms: Number(process.env.ROOMS_GARDEN_RETREAT || 6),
+    baseRate: 7800,
+    description: 'Serene garden-level room surrounded by lush greenery.',
+  },
+];
+
+const SALES_PERIODS = [
+  { key: 'daily', label: 'Daily', shift: { hours: 24 } },
+  { key: 'weekly', label: 'Weekly', shift: { days: 7 } },
+  { key: 'monthly', label: 'Monthly', shift: { months: 1 } },
+  { key: 'yearly', label: 'Yearly', shift: { years: 1 } },
+];
+const SALES_PERIOD_KEYS = new Set(SALES_PERIODS.map((period) => period.key));
+
+const ROOM_TYPES_CACHE_TTL_MS = 5 * 60 * 1000;
+let roomTypesCache = { rows: null, timestamp: 0 };
+
+const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
+if (JWT_SECRET === 'change-me-in-production') {
+  console.warn('JWT_SECRET is using the default value. Set a strong secret in your environment.');
+}
+
+const STAFF_USERNAME = process.env.STAFF_USERNAME || 'staff';
+const OWNER_USERNAME = process.env.OWNER_USERNAME || 'owner';
+const FORCE_RESET_DEFAULT_CREDENTIALS =
+  String(process.env.FORCE_RESET_DEFAULT_CREDENTIALS || '')
+    .trim()
+    .toLowerCase() === 'true';
+
+app.post('/api/verification/request-code', async (req, res) => {
+  try {
+    const { fullName, email, phone } = req.body;
+
+    if (!fullName || !email || !phone) {
+      return res.status(400).json({ message: 'Full name, email, and phone are required.' });
+    }
+
+    const trimmedEmail = email.trim();
+    const trimmedPhone = phone.trim();
+
+    const lastRequestResult = await query(
+      `SELECT TOP 1 created_at 
+         FROM dbo.verification_codes 
+        WHERE email = @email 
+        ORDER BY created_at DESC`,
+      [
+        {
+          name: 'email',
+          type: sql.NVarChar(255),
+          value: trimmedEmail,
+        },
+      ]
+    );
+
+    const lastRequest = lastRequestResult.recordset[0];
+    if (lastRequest?.created_at) {
+      const lastCreated = new Date(lastRequest.created_at);
+      const secondsSinceLast = (Date.now() - lastCreated.getTime()) / 1000;
+      if (secondsSinceLast < 60) {
+        return res
+          .status(429)
+          .json({ message: 'Please wait a minute before requesting a new code.' });
+      }
+    }
+
+    const verificationCode = generateCode();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    const insertResult = await query(
+      `INSERT INTO dbo.verification_codes (email, phone, code, expires_at)
+       OUTPUT INSERTED.id
+       VALUES (@email, @phone, @code, @expires_at);`,
+      [
+        { name: 'email', type: sql.NVarChar(255), value: trimmedEmail },
+        { name: 'phone', type: sql.NVarChar(50), value: trimmedPhone },
+        { name: 'code', type: sql.VarChar(10), value: verificationCode },
+        { name: 'expires_at', type: sql.DateTime2, value: expiresAt },
+      ]
+    );
+
+    sendVerificationEmail(trimmedEmail, verificationCode, fullName).catch((error) => {
+      console.warn('Unable to send verification email. Falling back to console log.', error);
+      console.info(`Verification code for ${trimmedEmail}: ${verificationCode}`);
+    });
+
+    return res.json({
+      message: 'Verification code sent. Please check your inbox.',
+      verificationRequestId: insertResult.recordset[0]?.id ?? null,
+    });
+  } catch (error) {
+    console.error('Failed to issue verification code', error);
+    return res
+      .status(500)
+      .json({ message: 'Unable to issue verification code. Please try again.' });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username and password are required.' });
+    }
+
+    const pool = await poolConnect;
+    const result = await pool
+      .request()
+      .input('username', sql.NVarChar(100), username.trim())
+      .query(`SELECT TOP 1 id, username, password_hash, role FROM dbo.users WHERE username = @username`);
+
+    const userRow = result.recordset[0];
+    if (!userRow) {
+      return res.status(401).json({ message: 'Invalid credentials.' });
+    }
+
+    const validPassword = await bcrypt.compare(password, userRow.password_hash);
+    if (!validPassword) {
+      return res.status(401).json({ message: 'Invalid credentials.' });
+    }
+
+    const token = jwt.sign(
+      { sub: userRow.id, username: userRow.username, role: userRow.role },
+      JWT_SECRET,
+      { expiresIn: '8h' }
+    );
+
+    return res.json({ token, role: userRow.role, username: userRow.username });
+  } catch (error) {
+    console.error('Login failed', error);
+    return res.status(500).json({ message: 'Unable to log in right now. Please try again.' });
+  }
+});
+
+app.post('/api/bookings', async (req, res) => {
+  try {
+    const {
+      fullName,
+      email,
+      phone,
+      checkIn,
+      checkOut,
+      guests,
+      roomType,
+      specialRequests,
+      verificationCode,
+      paymentMethod,
+      paymentReference,
+      paymentAmount,
+    } = req.body;
+
+    if (
+      !fullName ||
+      !email ||
+      !phone ||
+      !checkIn ||
+      !checkOut ||
+      !guests ||
+      !roomType ||
+      !verificationCode ||
+      !paymentMethod ||
+      !paymentReference ||
+      paymentAmount === undefined
+    ) {
+      return res.status(400).json({ message: 'Please supply all required booking details.' });
+    }
+
+    const parsedGuests = Number.parseInt(guests, 10);
+    if (Number.isNaN(parsedGuests) || parsedGuests <= 0) {
+      return res.status(400).json({ message: 'Guest count must be a positive number.' });
+    }
+
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    if (Number.isNaN(checkInDate.getTime()) || Number.isNaN(checkOutDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid check-in or check-out date.' });
+    }
+    if (checkOutDate <= checkInDate) {
+      return res.status(400).json({ message: 'Check-out date must be after check-in date.' });
+    }
+
+    const allowedPaymentMethods = ['GCash', 'PayMaya', 'Credit Card'];
+    if (!allowedPaymentMethods.includes(paymentMethod)) {
+      return res.status(400).json({ message: 'Select a supported payment method.' });
+    }
+
+    const trimmedReference = paymentReference.trim();
+    if (trimmedReference.length < 6) {
+      return res.status(400).json({ message: 'Enter a valid payment reference.' });
+    }
+
+    const parsedPaymentAmount = Number.parseFloat(paymentAmount);
+    if (Number.isNaN(parsedPaymentAmount) || parsedPaymentAmount < MINIMUM_DEPOSIT) {
+      return res
+        .status(400)
+        .json({ message: `Deposit must be at least PHP ${MINIMUM_DEPOSIT.toFixed(2)}.` });
+    }
+
+    const trimmedEmail = email.trim();
+    const trimmedCode = verificationCode.trim();
+
+    const verificationResult = await query(
+      `SELECT TOP 1 *
+         FROM dbo.verification_codes
+        WHERE email = @email
+          AND code = @code
+        ORDER BY created_at DESC`,
+      [
+        { name: 'email', type: sql.NVarChar(255), value: trimmedEmail },
+        { name: 'code', type: sql.VarChar(10), value: trimmedCode },
+      ]
+    );
+
+    const verificationRow = verificationResult.recordset[0];
+    if (!verificationRow) {
+      return res.status(401).json({ message: 'Verification code is incorrect for this email.' });
+    }
+
+    const now = new Date();
+    if (verificationRow.used) {
+      return res.status(401).json({ message: 'Verification code has already been used.' });
+    }
+    if (now > new Date(verificationRow.expires_at)) {
+      return res.status(401).json({ message: 'Verification code has expired.' });
+    }
+
+    const overlappingResult = await query(
+      `SELECT TOP 1 id
+         FROM dbo.bookings
+        WHERE email = @email
+          AND NOT (
+            check_out <= @check_in
+            OR check_in >= @check_out
+          )`,
+      [
+        { name: 'email', type: sql.NVarChar(255), value: trimmedEmail },
+        { name: 'check_in', type: sql.DateTime2, value: checkInDate },
+        { name: 'check_out', type: sql.DateTime2, value: checkOutDate },
+      ]
+    );
+
+    if (overlappingResult.recordset.length > 0) {
+      return res.status(409).json({
+        message:
+          'You already have a confirmed booking that overlaps these dates. Please contact support to modify it.',
+      });
+    }
+
+    const pool = await poolConnect;
+    const transaction = new sql.Transaction(pool);
+
+    try {
+      await transaction.begin();
+
+      const bookingRequest = new sql.Request(transaction);
+      bookingRequest.input('full_name', sql.NVarChar(255), fullName.trim());
+      bookingRequest.input('email', sql.NVarChar(255), trimmedEmail);
+      bookingRequest.input('phone', sql.NVarChar(50), phone.trim());
+      bookingRequest.input('check_in', sql.DateTime2, checkInDate);
+      bookingRequest.input('check_out', sql.DateTime2, checkOutDate);
+      bookingRequest.input('guests', sql.Int, parsedGuests);
+      bookingRequest.input('room_type', sql.NVarChar(120), roomType.trim());
+      bookingRequest.input(
+        'special_requests',
+        sql.NVarChar(sql.MAX),
+        specialRequests?.trim() || null
+      );
+      bookingRequest.input('verification_code_id', sql.Int, verificationRow.id);
+      bookingRequest.input('source', sql.NVarChar(20), 'online');
+      bookingRequest.input('payment_method', sql.NVarChar(50), paymentMethod);
+      bookingRequest.input(
+        'payment_reference',
+        sql.NVarChar(80),
+        trimmedReference
+      );
+      bookingRequest.input('payment_amount', sql.Decimal(10, 2), parsedPaymentAmount);
+      bookingRequest.input('payment_received', sql.Bit, 1);
+
+      const bookingResult = await bookingRequest.query(
+        `INSERT INTO dbo.bookings
+          (full_name, email, phone, check_in, check_out, guests, room_type, special_requests, verification_code_id, source, payment_method, payment_reference, payment_amount, payment_received)
+         OUTPUT INSERTED.id
+         VALUES (@full_name, @email, @phone, @check_in, @check_out, @guests, @room_type, @special_requests, @verification_code_id, @source, @payment_method, @payment_reference, @payment_amount, @payment_received);`
+      );
+
+      const markUsedRequest = new sql.Request(transaction);
+      markUsedRequest.input('id', sql.Int, verificationRow.id);
+      markUsedRequest.input('used_at', sql.DateTime2, new Date());
+      const updateResult = await markUsedRequest.query(
+        `UPDATE dbo.verification_codes
+            SET used = 1,
+                used_at = @used_at
+          WHERE id = @id AND used = 0;`
+      );
+
+      if (updateResult.rowsAffected[0] !== 1) {
+        await transaction.rollback();
+        return res.status(401).json({ message: 'Verification code has already been used.' });
+      }
+
+      await transaction.commit();
+
+      return res.status(201).json({
+        message: 'Booking confirmed. We look forward to your stay!',
+        bookingId: bookingResult.recordset[0]?.id ?? null,
+      });
+    } catch (transactionError) {
+      await transaction.rollback().catch(() => {});
+      console.error('Failed to create booking (transaction)', transactionError);
+      return res
+        .status(500)
+        .json({ message: 'Unable to create booking right now. Please retry.' });
+    }
+  } catch (error) {
+    console.error('Failed to create booking', error);
+    return res.status(500).json({ message: 'Unable to create booking right now. Please retry.' });
+  }
+});
+
+app.get('/api/bookings', authenticate, requireRole('staff', 'owner'), async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const normalizedStart = normalizeDateOnly(startDate);
+    if (startDate && !normalizedStart) {
+      return res.status(400).json({ message: 'Invalid start date. Use YYYY-MM-DD.' });
+    }
+
+    const normalizedEnd = normalizeDateOnly(endDate);
+    if (endDate && !normalizedEnd) {
+      return res.status(400).json({ message: 'Invalid end date. Use YYYY-MM-DD.' });
+    }
+
+    if (normalizedStart && normalizedEnd) {
+      const start = new Date(normalizedStart);
+      const end = new Date(normalizedEnd);
+      if (start > end) {
+        return res.status(400).json({ message: 'Start date must be before end date.' });
+      }
+    }
+
+    const filters = [];
+    const parameters = [];
+
+    if (normalizedStart) {
+      filters.push('b.check_in >= CAST(@filterStart AS DATETIME2)');
+      parameters.push({
+        name: 'filterStart',
+        type: sql.Date,
+        value: normalizedStart,
+      });
+    }
+
+    if (normalizedEnd) {
+      filters.push('b.check_in < DATEADD(DAY, 1, CAST(@filterEnd AS DATETIME2))');
+      parameters.push({
+        name: 'filterEnd',
+        type: sql.Date,
+        value: normalizedEnd,
+      });
+    }
+
+    const whereClause = filters.length > 0 ? `WHERE ${filters.join(' AND ')}` : '';
+
+    const result = await query(
+      `SELECT b.*, vc.code AS verification_code
+         FROM dbo.bookings b
+         LEFT JOIN dbo.verification_codes vc ON b.verification_code_id = vc.id
+         ${whereClause}
+         ORDER BY b.check_in DESC, b.created_at DESC`,
+      parameters
+    );
+
+    return res.json(result.recordset.map(mapBookingRow));
+  } catch (error) {
+    console.error('Failed to load bookings for portal', error);
+    return res.status(500).json({ message: 'Unable to load bookings right now.' });
+  }
+});
+
+app.post('/api/bookings/direct', authenticate, requireRole('staff', 'owner'), async (req, res) => {
+  try {
+    const {
+      fullName,
+      email,
+      phone,
+      checkIn,
+      checkOut,
+      guests,
+      roomType,
+      specialRequests,
+      paymentMethod,
+      paymentReference,
+      paymentAmount,
+    } = req.body;
+
+    if (
+      !fullName ||
+      !email ||
+      !phone ||
+      !checkIn ||
+      !checkOut ||
+      !guests ||
+      !roomType ||
+      !paymentMethod ||
+      !paymentReference ||
+      paymentAmount === undefined
+    ) {
+      return res.status(400).json({ message: 'All booking details and deposit information are required.' });
+    }
+
+    const parsedGuests = Number.parseInt(guests, 10);
+    if (Number.isNaN(parsedGuests) || parsedGuests <= 0) {
+      return res.status(400).json({ message: 'Guest count must be a positive number.' });
+    }
+
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    if (Number.isNaN(checkInDate.getTime()) || Number.isNaN(checkOutDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid check-in or check-out date.' });
+    }
+    if (checkOutDate <= checkInDate) {
+      return res.status(400).json({ message: 'Check-out date must be after check-in date.' });
+    }
+
+    const depositAmount = Number.parseFloat(paymentAmount);
+    if (Number.isNaN(depositAmount) || depositAmount < MINIMUM_DEPOSIT) {
+      return res
+        .status(400)
+        .json({ message: `Deposit must be at least PHP ${MINIMUM_DEPOSIT.toFixed(2)}.` });
+    }
+
+    const normalizedMethod = String(paymentMethod).trim();
+    if (!normalizedMethod) {
+      return res.status(400).json({ message: 'Select a payment method.' });
+    }
+
+    const normalizedReference = String(paymentReference).trim();
+    if (normalizedReference.length < 3) {
+      return res.status(400).json({ message: 'Enter a valid payment reference.' });
+    }
+
+    const pool = await poolConnect;
+    const insertResult = await pool
+      .request()
+      .input('full_name', sql.NVarChar(255), fullName.trim())
+      .input('email', sql.NVarChar(255), email.trim())
+      .input('phone', sql.NVarChar(50), phone.trim())
+      .input('check_in', sql.DateTime2, checkInDate)
+      .input('check_out', sql.DateTime2, checkOutDate)
+      .input('guests', sql.Int, parsedGuests)
+      .input('room_type', sql.NVarChar(120), roomType.trim())
+      .input('special_requests', sql.NVarChar(sql.MAX), specialRequests?.trim() || null)
+      .input('source', sql.NVarChar(20), 'direct')
+      .input('payment_method', sql.NVarChar(50), normalizedMethod)
+      .input('payment_reference', sql.NVarChar(80), normalizedReference)
+      .input('payment_amount', sql.Decimal(10, 2), depositAmount)
+      .input('payment_received', sql.Bit, 1)
+      .input('status', sql.NVarChar(20), 'confirmed')
+      .query(
+        `INSERT INTO dbo.bookings
+           (full_name, email, phone, check_in, check_out, guests, room_type, special_requests,
+            verification_code_id, source, payment_method, payment_reference, payment_amount, payment_received, status)
+         OUTPUT INSERTED.id
+         VALUES
+           (@full_name, @email, @phone, @check_in, @check_out, @guests, @room_type, @special_requests,
+            NULL, @source, @payment_method, @payment_reference, @payment_amount, @payment_received, @status);`
+      );
+
+    return res.status(201).json({
+      message: 'Booking recorded successfully.',
+      bookingId: insertResult.recordset[0]?.id ?? null,
+    });
+  } catch (error) {
+    console.error('Failed to create direct booking', error);
+    return res
+      .status(500)
+      .json({ message: 'Unable to create direct booking right now. Please retry.' });
+  }
+});
+
+app.patch(
+  '/api/bookings/:id/checkin',
+  authenticate,
+  requireRole('staff', 'owner'),
+  async (req, res) => {
+    try {
+      const bookingId = Number.parseInt(req.params.id, 10);
+      if (Number.isNaN(bookingId)) {
+        return res.status(400).json({ message: 'Invalid booking id.' });
+      }
+
+      const pool = await poolConnect;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, bookingId)
+        .query(
+          `UPDATE dbo.bookings
+              SET status = 'checked_in',
+                  checked_in_at = SYSUTCDATETIME()
+            WHERE id = @id AND status NOT IN ('checked_in', 'checked_out');
+           SELECT @@ROWCOUNT AS affected;`
+        );
+
+      const affected = result.recordset?.[0]?.affected ?? 0;
+      if (!affected) {
+        return res
+          .status(404)
+          .json({ message: 'Booking not found or already checked in/out.' });
+      }
+
+      return res.json({ message: 'Guest checked in successfully.' });
+    } catch (error) {
+      console.error('Failed to check in booking', error);
+      return res.status(500).json({ message: 'Unable to check in right now.' });
+    }
+  }
+);
+
+app.patch(
+  '/api/bookings/:id/checkout',
+  authenticate,
+  requireRole('staff', 'owner'),
+  async (req, res) => {
+    try {
+      const bookingId = Number.parseInt(req.params.id, 10);
+      if (Number.isNaN(bookingId)) {
+        return res.status(400).json({ message: 'Invalid booking id.' });
+      }
+
+      const pool = await poolConnect;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, bookingId)
+        .query(
+          `UPDATE dbo.bookings
+              SET status = 'checked_out',
+                  checked_out_at = SYSUTCDATETIME()
+            WHERE id = @id AND status <> 'checked_out';
+           SELECT @@ROWCOUNT AS affected;`
+        );
+
+      const affected = result.recordset?.[0]?.affected ?? 0;
+      if (!affected) {
+        return res.status(404).json({ message: 'Booking not found or already checked out.' });
+      }
+
+      return res.json({ message: 'Guest checked out successfully.' });
+    } catch (error) {
+      console.error('Failed to checkout booking', error);
+      return res.status(500).json({ message: 'Unable to checkout booking right now.' });
+    }
+  }
+);
+
+app.get('/api/overview', authenticate, requireRole('owner'), async (req, res) => {
+  try {
+    const pool = await poolConnect;
+    const { windowKey: salesWindowKey, label: salesWindowLabel } = resolveSalesWindow(req.query?.salesWindow);
+    if (process.env.LOG_OVERVIEW_QUERIES === 'true') {
+      console.info(`[overview] window=${req.query?.salesWindow ?? 'default'} => ${salesWindowKey} (${salesWindowLabel})`);
+    }
+
+    const result = await pool.request().query(`
+      DECLARE @now DATETIME2 = SYSUTCDATETIME();
+      DECLARE @startOfDay DATETIME2 = DATEADD(DAY, DATEDIFF(DAY, 0, @now), 0);
+
+      SELECT COUNT(*) AS totalBookings FROM dbo.bookings;
+
+      SELECT COUNT(*) AS checkedInGuests
+        FROM dbo.bookings
+        WHERE status = 'checked_in';
+
+      SELECT COUNT(*) AS checkedOutToday
+        FROM dbo.bookings
+        WHERE status = 'checked_out'
+          AND checked_out_at >= @startOfDay;
+
+      SELECT
+        SUM(CASE WHEN source = 'direct' THEN 1 ELSE 0 END) AS walkIns,
+        SUM(CASE WHEN source <> 'direct' THEN 1 ELSE 0 END) AS onlineReservations
+      FROM dbo.bookings;
+
+      SELECT room_type, COUNT(*) AS occupiedCount
+        FROM dbo.bookings
+        WHERE status <> 'checked_out'
+          AND (check_out IS NULL OR check_out >= @now)
+        GROUP BY room_type;
+
+      SELECT id, name, description, total_rooms, base_rate, created_at, updated_at
+        FROM dbo.room_types
+        ORDER BY name;
+
+      SELECT period_type, period_start, period_end, total_amount, updated_at
+        FROM dbo.sales_summary;
+    `);
+
+    const totalBookings = result.recordsets[0][0]?.totalBookings ?? 0;
+    const checkedInGuests = result.recordsets[1][0]?.checkedInGuests ?? 0;
+    const checkedOutToday = result.recordsets[2][0]?.checkedOutToday ?? 0;
+    const walkIns = Number(result.recordsets[3][0]?.walkIns ?? 0);
+    const onlineReservations = Number(result.recordsets[3][0]?.onlineReservations ?? 0);
+    const occupancyRows = result.recordsets[4] || [];
+    const roomTypeRows = result.recordsets[5] || [];
+
+    let salesSummaryRows = result.recordsets[6] || [];
+    if (!salesSummaryRows || salesSummaryRows.length < SALES_PERIODS.length) {
+      await refreshSalesSummaryCache(pool);
+      salesSummaryRows = (
+        await pool
+          .request()
+          .query(
+            `SELECT period_type, period_start, period_end, total_amount, updated_at
+               FROM dbo.sales_summary;`
+          )
+      ).recordset;
+    }
+
+    const roomTypes = roomTypeRows.map(mapRoomTypeRecord);
+    const roomTypeMap = new Map(roomTypes.map((roomType) => [roomType.name, roomType]));
+    const occupancyMap = new Map(
+      occupancyRows.map((row) => [row.room_type, Number(row.occupiedCount || 0)])
+    );
+
+    const availabilityByType = roomTypes.map((roomType) => {
+      const occupied = occupancyMap.get(roomType.name) || 0;
+      const available = Math.max(roomType.totalRooms - occupied, 0);
+      return {
+        roomType: roomType.name,
+        totalRooms: roomType.totalRooms,
+        occupied,
+        available,
+        baseRate: roomType.baseRate,
+        description: roomType.description,
+      };
+    });
+
+    for (const [roomTypeName, occupied] of occupancyMap.entries()) {
+      if (!roomTypeMap.has(roomTypeName)) {
+        availabilityByType.push({
+          roomType: roomTypeName,
+          totalRooms: occupied,
+          occupied,
+          available: 0,
+        });
+      }
+    }
+
+    const totalRooms = roomTypes.reduce((sum, roomType) => sum + roomType.totalRooms, 0);
+    const availableRooms = availabilityByType.reduce((sum, entry) => sum + entry.available, 0);
+
+    const summaryMap = new Map();
+    for (const row of salesSummaryRows) {
+      summaryMap.set(row.period_type, row);
+    }
+
+    const selectedSummary = summaryMap.get(salesWindowKey);
+    const fallbackRange = calculateSalesPeriodRange(getPeriodDefinition(salesWindowKey), new Date());
+    const salesWindowRange = selectedSummary
+      ? {
+          start: selectedSummary.period_start ? new Date(selectedSummary.period_start).toISOString() : null,
+          end: selectedSummary.period_end ? new Date(selectedSummary.period_end).toISOString() : null,
+        }
+      : {
+          start: fallbackRange.start.toISOString(),
+          end: fallbackRange.end.toISOString(),
+        };
+
+    const overview = {
+      totalBookings,
+      availableRooms,
+      checkedInGuests,
+      checkedOutToday,
+      walkIns,
+      onlineReservations,
+      totalRooms,
+      sales: {
+        daily: Number(summaryMap.get('daily')?.total_amount || 0),
+        weekly: Number(summaryMap.get('weekly')?.total_amount || 0),
+        monthly: Number(summaryMap.get('monthly')?.total_amount || 0),
+        yearly: Number(summaryMap.get('yearly')?.total_amount || 0),
+        selected: {
+          window: salesWindowKey,
+          label: salesWindowLabel,
+          total: Number(summaryMap.get(salesWindowKey)?.total_amount || 0),
+          range: salesWindowRange,
+          updatedAt: selectedSummary?.updated_at ? new Date(selectedSummary.updated_at).toISOString() : null,
+        },
+      },
+      availabilityByType,
+    };
+
+    return res.json(overview);
+  } catch (error) {
+    console.error('Failed to load overview', error);
+    return res.status(500).json({ message: 'Unable to load dashboard metrics currently.' });
+  }
+});
+
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/config', (_req, res) => {
+  res.json({
+    minimumDeposit: MINIMUM_DEPOSIT,
+    paymentOptions: ['GCash', 'PayMaya', 'Credit Card'],
+    gcashIntegrationEnabled: Boolean(process.env.PAYMONGO_SECRET_KEY),
+    staffPortalEnabled: true,
+  });
+});
+
+app.post('/api/payments/gcash', async (req, res) => {
+  try {
+    if (!process.env.PAYMONGO_SECRET_KEY) {
+      return res.status(503).json({
+        message: 'GCash integration is not configured. Please contact the hotel team for assistance.',
+      });
+    }
+
+    const { amount, customerName, email, remarks } = req.body;
+
+    if (!amount || Number.isNaN(Number(amount)) || Number(amount) <= 0) {
+      return res.status(400).json({ message: 'Invalid payment amount specified.' });
+    }
+
+    if (!customerName) {
+      return res.status(400).json({ message: 'Customer name is required to generate a GCash link.' });
+    }
+
+    const cents = Math.round(Number(amount) * 100);
+
+    const payload = {
+      data: {
+        attributes: {
+          amount: cents,
+          currency: 'PHP',
+          description: `Harborview deposit for ${customerName}`,
+          remarks: remarks || 'Booking deposit',
+          payment_method_types: ['gcash'],
+          statement_descriptor: 'Harborview Deposit',
+          send_email_receipt: Boolean(email),
+          customer: email
+            ? {
+                name: customerName,
+                email,
+              }
+            : undefined,
+        },
+      },
+    };
+
+    const response = await fetch('https://api.paymongo.com/v1/links', {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${process.env.PAYMONGO_SECRET_KEY}:`).toString('base64')}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error('PayMongo link creation failed', result);
+      const message =
+        result?.errors?.[0]?.detail || 'Unable to generate GCash payment link. Please try again later.';
+      return res.status(502).json({ message });
+    }
+
+    const linkData = result?.data;
+    return res.status(201).json({
+      message: 'GCash payment link created.',
+      checkoutUrl: linkData?.attributes?.checkout_url,
+      referenceNumber: linkData?.attributes?.reference_number,
+    });
+  } catch (error) {
+    console.error('Failed to create GCash payment link', error);
+    return res
+      .status(500)
+      .json({ message: 'Unable to create GCash payment link at the moment. Please try again.' });
+  }
+});
+
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(ROOT_DIR, '..', 'public', 'hotel.html'));
+});
+
+app.get('/hotel', (_req, res) => {
+  res.sendFile(path.join(ROOT_DIR, '..', 'public', 'hotel.html'));
+});
+
+app.get('/rooms', (_req, res) => {
+  res.sendFile(path.join(ROOT_DIR, '..', 'public', 'rooms.html'));
+});
+
+app.get('/book', (_req, res) => {
+  res.sendFile(path.join(ROOT_DIR, '..', 'public', 'index.html'));
+});
+
+app.get('/admin', (_req, res) => {
+  res.sendFile(path.join(ROOT_DIR, '..', 'public', 'admin.html'));
+});
+
+app.get(/^\/(?!api\/).*/, (_req, res) => {
+  res.sendFile(path.join(ROOT_DIR, '..', 'public', 'index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Hotel booking server listening on http://localhost:${PORT}`);
+});
+
+function generateCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function createTransporter() {
+  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_SECURE } = process.env;
+  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
+    console.warn(
+      'SMTP credentials not fully configured. Verification codes will be logged to the console.'
+    );
+    return null;
+  }
+
+  return nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: Number(SMTP_PORT),
+    secure: SMTP_SECURE ? SMTP_SECURE === 'true' : Number(SMTP_PORT) === 465,
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASS,
+    },
+  });
+}
+
+async function sendVerificationEmail(email, code, fullName) {
+  if (!transporter) {
+    console.info(`Verification code for ${email}: ${code}`);
+    return;
+  }
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || `"Hotel Reservation" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: 'Your Hotel Booking Verification Code',
+    text: [
+      `Hi ${fullName || 'guest'},`,
+      '',
+      'Use the verification code below to finish your hotel booking:',
+      '',
+      code,
+      '',
+      'This code expires in 10 minutes. If you did not request it, please ignore this email.',
+      '',
+      'We look forward to hosting you!',
+    ].join('\n'),
+  });
+}
+
+function buildSqlConfig(options = {}) {
+  const isAdmin = options.admin === true;
+  const connectionString = isAdmin
+    ? process.env.SQL_ADMIN_CONNECTION_STRING
+    : process.env.SQL_CONNECTION_STRING;
+
+  if (connectionString) {
+    return {
+      connectionConfig: connectionString,
+      connectionLabel: isAdmin ? 'admin connection string' : 'via connection string',
+    };
+  }
+
+  const prefix = isAdmin ? 'SQL_ADMIN_' : 'SQL_';
+  const read = (key, fallback) => process.env[`${prefix}${key}`] ?? (!isAdmin ? process.env[`SQL_${key}`] : fallback);
+
+  const server = read('SERVER');
+  const database = read('DATABASE');
+  const user = read('USER');
+  const password = read('PASSWORD');
+  const port = read('PORT');
+  const encrypt = read('ENCRYPT');
+  const trustCert = read('TRUST_CERT');
+  const poolMax = read('POOL_MAX');
+  const domain = read('DOMAIN');
+  const authType = read('AUTH_TYPE');
+
+  if (!server || !database) {
+    if (isAdmin) {
+      return null;
+    }
+    console.error(
+      'Missing SQL Server configuration. Please set SQL_SERVER and SQL_DATABASE, or provide SQL_CONNECTION_STRING in your environment.'
+    );
+    process.exit(1);
+  }
+
+  const config = {
+    server,
+    database,
+    port: Number(port || 1433),
+    options: {
+      encrypt: encrypt === 'true',
+      trustServerCertificate: trustCert !== 'false',
+    },
+    pool: {
+      max: Number(poolMax || 10),
+      min: 0,
+      idleTimeoutMillis: 30000,
+    },
+  };
+
+  if (domain) {
+    config.domain = domain;
+  }
+
+  if (authType === 'ntlm') {
+    if (!user || !password || !domain) {
+      if (isAdmin) {
+        return null;
+      }
+      console.error('NTLM authentication requires SQL_USER, SQL_PASSWORD, and SQL_DOMAIN to be set.');
+      process.exit(1);
+    }
+    config.authentication = {
+      type: 'ntlm',
+      options: {
+        userName: user,
+        password,
+        domain,
+      },
+    };
+  } else if (user && password) {
+    config.user = user;
+    config.password = password;
+  } else if (user || password) {
+    if (isAdmin) {
+      return null;
+    }
+    console.warn(
+      'Both SQL_USER and SQL_PASSWORD are required for SQL authentication. Either supply both or use SQL_CONNECTION_STRING.'
+    );
+  }
+
+  return {
+    connectionConfig: config,
+    connectionLabel: `${server}/${database}${isAdmin ? ' (admin)' : ''}`,
+  };
+}
+
+async function query(queryText, parameters = []) {
+  const pool = await poolConnect;
+  const request = pool.request();
+  for (const param of parameters) {
+    request.input(param.name, param.type, param.value);
+  }
+  return request.query(queryText);
+}
+
+async function ensureTables(pool) {
+  try {
+    await performSchemaMigrations(pool);
+  } catch (error) {
+    if (!isSchemaPermissionError(error)) {
+      throw error;
+    }
+
+    const adminConfig = buildSqlConfig({ admin: true });
+    if (!adminConfig) {
+      const wrapped = new Error(
+        'Schema migration skipped: The SQL login is missing CREATE/ALTER permissions. Provide admin credentials or run sql/schema.sql manually.'
+      );
+      wrapped.code = 'MIGRATION_PERMISSION_DENIED';
+      wrapped.original = error.original || error;
+      throw wrapped;
+    }
+
+    console.warn('Insufficient permissions detected. Attempting migrations with admin credentials...');
+    const adminPool = new sql.ConnectionPool(adminConfig.connectionConfig);
+    try {
+      await adminPool.connect();
+      await performSchemaMigrations(adminPool);
+    } finally {
+      adminPool.close();
+    }
+
+    // Retry with application pool to ensure everything is ready.
+    await performSchemaMigrations(pool);
+  }
+}
+
+async function performSchemaMigrations(pool) {
+  await pool.request().query(`
+    IF OBJECT_ID('dbo.verification_codes', 'U') IS NULL
+    BEGIN
+      CREATE TABLE dbo.verification_codes (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        email NVARCHAR(255) NOT NULL,
+        phone NVARCHAR(50) NOT NULL,
+        code VARCHAR(10) NOT NULL,
+        created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        expires_at DATETIME2 NOT NULL,
+        used BIT NOT NULL DEFAULT 0,
+        used_at DATETIME2 NULL
+      );
+      CREATE INDEX IX_verification_codes_email_created
+        ON dbo.verification_codes (email, created_at);
+    END;
+
+    IF OBJECT_ID('dbo.bookings', 'U') IS NULL
+    BEGIN
+      CREATE TABLE dbo.bookings (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        full_name NVARCHAR(255) NOT NULL,
+        email NVARCHAR(255) NOT NULL,
+        phone NVARCHAR(50) NOT NULL,
+        check_in DATETIME2 NOT NULL,
+        check_out DATETIME2 NOT NULL,
+        guests INT NOT NULL,
+        room_type NVARCHAR(120) NOT NULL,
+        special_requests NVARCHAR(MAX) NULL,
+        verification_code_id INT NULL,
+        payment_method NVARCHAR(50) NOT NULL,
+        payment_reference NVARCHAR(80) NOT NULL,
+        payment_amount DECIMAL(10,2) NOT NULL,
+        payment_received BIT NOT NULL DEFAULT 0,
+        status NVARCHAR(20) NOT NULL DEFAULT 'confirmed',
+        checked_out_at DATETIME2 NULL,
+        created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        CONSTRAINT FK_bookings_verification_codes FOREIGN KEY (verification_code_id)
+          REFERENCES dbo.verification_codes(id)
+      );
+      CREATE INDEX IX_bookings_email_dates
+        ON dbo.bookings (email, check_in, check_out);
+    END;
+
+    IF OBJECT_ID('dbo.users', 'U') IS NULL
+    BEGIN
+      CREATE TABLE dbo.users (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        username NVARCHAR(100) NOT NULL UNIQUE,
+        password_hash NVARCHAR(255) NOT NULL,
+        role NVARCHAR(20) NOT NULL,
+        created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+      );
+    END;
+
+    IF OBJECT_ID('dbo.room_types', 'U') IS NULL
+    BEGIN
+      CREATE TABLE dbo.room_types (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        name NVARCHAR(120) NOT NULL UNIQUE,
+        description NVARCHAR(500) NULL,
+        total_rooms INT NOT NULL,
+        base_rate DECIMAL(10,2) NULL,
+        created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        updated_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+      );
+    END;
+
+    IF OBJECT_ID('dbo.sales_summary', 'U') IS NULL
+    BEGIN
+      CREATE TABLE dbo.sales_summary (
+        period_type NVARCHAR(20) NOT NULL PRIMARY KEY,
+        period_start DATETIME2 NOT NULL,
+        period_end DATETIME2 NOT NULL,
+        total_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+        updated_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+      );
+    END;
+  `);
+
+  await pool.request().query(`
+    IF OBJECT_ID('dbo.bookings', 'U') IS NOT NULL
+    BEGIN
+      IF COL_LENGTH('dbo.bookings', 'payment_method') IS NULL
+      BEGIN
+        EXEC ('ALTER TABLE dbo.bookings ADD payment_method NVARCHAR(50) NULL;');
+        EXEC ('UPDATE dbo.bookings SET payment_method = ''Pending'' WHERE payment_method IS NULL;');
+        EXEC ('ALTER TABLE dbo.bookings ALTER COLUMN payment_method NVARCHAR(50) NOT NULL;');
+      END;
+
+      IF COL_LENGTH('dbo.bookings', 'payment_reference') IS NULL
+      BEGIN
+        EXEC ('ALTER TABLE dbo.bookings ADD payment_reference NVARCHAR(80) NULL;');
+        EXEC ('UPDATE dbo.bookings SET payment_reference = ''N/A'' WHERE payment_reference IS NULL;');
+        EXEC ('ALTER TABLE dbo.bookings ALTER COLUMN payment_reference NVARCHAR(80) NOT NULL;');
+      END;
+
+      IF COL_LENGTH('dbo.bookings', 'payment_amount') IS NULL
+      BEGIN
+        EXEC ('ALTER TABLE dbo.bookings ADD payment_amount DECIMAL(10,2) NULL;');
+        EXEC ('UPDATE dbo.bookings SET payment_amount = 0 WHERE payment_amount IS NULL;');
+        EXEC ('ALTER TABLE dbo.bookings ALTER COLUMN payment_amount DECIMAL(10,2) NOT NULL;');
+      END;
+
+      IF COL_LENGTH('dbo.bookings', 'payment_received') IS NULL
+      BEGIN
+        EXEC ('ALTER TABLE dbo.bookings ADD payment_received BIT NULL;');
+        EXEC ('UPDATE dbo.bookings SET payment_received = 0 WHERE payment_received IS NULL;');
+        EXEC ('ALTER TABLE dbo.bookings ALTER COLUMN payment_received BIT NOT NULL;');
+      END;
+
+      IF COL_LENGTH('dbo.bookings', 'status') IS NULL
+      BEGIN
+        EXEC ('ALTER TABLE dbo.bookings ADD status NVARCHAR(20) NOT NULL DEFAULT ''confirmed'';');
+      END;
+
+      IF COL_LENGTH('dbo.bookings', 'checked_out_at') IS NULL
+      BEGIN
+        EXEC ('ALTER TABLE dbo.bookings ADD checked_out_at DATETIME2 NULL;');
+      END;
+
+      IF COL_LENGTH('dbo.bookings', 'source') IS NULL
+      BEGIN
+        EXEC ('ALTER TABLE dbo.bookings ADD source NVARCHAR(20) NOT NULL DEFAULT ''online'';');
+      END;
+
+      IF COL_LENGTH('dbo.bookings', 'checked_in_at') IS NULL
+      BEGIN
+        EXEC ('ALTER TABLE dbo.bookings ADD checked_in_at DATETIME2 NULL;');
+      END;
+
+      IF COLUMNPROPERTY(OBJECT_ID('dbo.bookings'), 'verification_code_id', 'AllowsNull') = 0
+      BEGIN
+        EXEC ('ALTER TABLE dbo.bookings ALTER COLUMN verification_code_id INT NULL;');
+      END;
+    END;
+  `);
+}
+
+async function ensureDefaultUsers(pool) {
+  const tasks = [];
+  const staffPassword = process.env.STAFF_DEFAULT_PASSWORD;
+  if (staffPassword) {
+    tasks.push(upsertUser(pool, STAFF_USERNAME, staffPassword, 'staff'));
+  } else {
+    console.warn(
+      'STAFF_DEFAULT_PASSWORD is not set. Staff portal will not have a default credential until you add one.'
+    );
+  }
+
+  const ownerPassword = process.env.OWNER_DEFAULT_PASSWORD;
+  if (ownerPassword) {
+    tasks.push(upsertUser(pool, OWNER_USERNAME, ownerPassword, 'owner'));
+  } else {
+    console.warn(
+      'OWNER_DEFAULT_PASSWORD is not set. Owner portal will not have a default credential until you add one.'
+    );
+  }
+
+  await Promise.all(tasks);
+}
+
+async function upsertUser(pool, username, plainTextPassword, role) {
+  const existing = await pool
+    .request()
+    .input('username', sql.NVarChar(100), username)
+    .query(`SELECT id, password_hash FROM dbo.users WHERE username = @username`);
+
+  if (existing.recordset.length === 0) {
+    const passwordHash = await bcrypt.hash(plainTextPassword, 10);
+    await pool
+      .request()
+      .input('username', sql.NVarChar(100), username)
+      .input('password_hash', sql.NVarChar(255), passwordHash)
+      .input('role', sql.NVarChar(20), role)
+      .query(
+        `INSERT INTO dbo.users (username, password_hash, role) VALUES (@username, @password_hash, @role)`
+      );
+    console.log(`Created default ${role} account "${username}".`);
+    return;
+  }
+
+  const currentHash = existing.recordset[0].password_hash;
+  const matches = await bcrypt.compare(plainTextPassword, currentHash);
+  if (!matches) {
+    if (!FORCE_RESET_DEFAULT_CREDENTIALS) {
+      console.info(
+        `Skipping default password update for ${role} account "${username}" because FORCE_RESET_DEFAULT_CREDENTIALS is not enabled.`
+      );
+      return;
+    }
+    const passwordHash = await bcrypt.hash(plainTextPassword, 10);
+    await pool
+      .request()
+      .input('username', sql.NVarChar(100), username)
+      .input('password_hash', sql.NVarChar(255), passwordHash)
+      .query(`UPDATE dbo.users SET password_hash = @password_hash WHERE username = @username`);
+    console.log(`Updated password for ${role} account "${username}".`);
+  }
+}
+
+async function verifyRequiredTables(pool) {
+  const result = await pool.request().query(`
+    SELECT name FROM sys.tables WHERE name IN ('verification_codes', 'bookings', 'users', 'room_types', 'sales_summary');
+  `);
+
+  const tableNames = new Set(result.recordset.map((row) => row.name));
+  const missing = ['verification_codes', 'bookings', 'users', 'room_types', 'sales_summary'].filter(
+    (name) => !tableNames.has(name)
+  );
+  if (missing.length > 0) {
+    throw new Error(
+      `Required database tables are missing (${missing.join(
+        ', '
+      )}). Run sql/schema.sql with a privileged account to create them before starting the server.`
+    );
+  }
+}
+
+function isSchemaPermissionError(error) {
+  const message = error?.message?.toLowerCase() ?? '';
+  return error?.number === 262 || message.includes('permission denied') || message.includes('create table');
+}
+
+function authenticate(req, res, next) {
+  const authHeader = req.headers.authorization || '';
+  if (!authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Authentication required.' });
+  }
+
+  const token = authHeader.slice(7);
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    req.user = payload;
+    return next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid or expired token.' });
+  }
+}
+
+function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({ message: 'You do not have permission to perform this action.' });
+    }
+    return next();
+  };
+}
+
+function normalizeDateOnly(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return null;
+  }
+
+  const date = new Date(`${trimmed}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  if (`${year}-${month}-${day}` !== trimmed) {
+    return null;
+  }
+
+  return trimmed;
+}
+
+function resolveSalesWindow(requestedWindow) {
+  const now = new Date();
+  const normalized =
+    typeof requestedWindow === 'string' && SALES_PERIOD_KEYS.has(requestedWindow.toLowerCase())
+      ? requestedWindow.toLowerCase()
+      : 'daily';
+
+  const period = getPeriodDefinition(normalized);
+  const range = calculateSalesPeriodRange(period, now);
+
+  return {
+    windowKey: normalized,
+    label: period.label,
+    start: range.start,
+    end: range.end,
+  };
+}
+
+function calculateSalesWindowStart(referenceDate, windowKey) {
+  const period = getPeriodDefinition(windowKey);
+  return calculateSalesPeriodRange(period, referenceDate).start;
+}
+
+function invalidateRoomTypesCache() {
+  roomTypesCache.rows = null;
+  roomTypesCache.timestamp = 0;
+}
+
+function mapRoomTypeRecord(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description || '',
+    totalRooms: Number(row.total_rooms ?? row.totalRooms ?? 0),
+    baseRate: row.base_rate == null ? null : Number(row.base_rate),
+    createdAt: row.created_at ? new Date(row.created_at) : null,
+    updatedAt: row.updated_at ? new Date(row.updated_at) : null,
+  };
+}
+
+function formatRoomTypeResponse(roomType) {
+  return {
+    id: roomType.id,
+    name: roomType.name,
+    description: roomType.description || '',
+    totalRooms: Number(roomType.totalRooms || 0),
+    baseRate: roomType.baseRate != null ? Number(roomType.baseRate) : null,
+    updatedAt: roomType.updatedAt ? roomType.updatedAt.toISOString() : null,
+    createdAt: roomType.createdAt ? roomType.createdAt.toISOString() : null,
+  };
+}
+
+async function loadRoomTypes(pool, options = {}) {
+  const forceRefresh = options.forceRefresh === true;
+  const now = Date.now();
+  if (!forceRefresh && roomTypesCache.rows && now - roomTypesCache.timestamp < ROOM_TYPES_CACHE_TTL_MS) {
+    return roomTypesCache.rows;
+  }
+
+  const result = await pool
+    .request()
+    .query(
+      `SELECT id, name, description, total_rooms, base_rate, created_at, updated_at
+         FROM dbo.room_types
+        ORDER BY name;`
+    );
+
+  roomTypesCache = {
+    rows: result.recordset.map(mapRoomTypeRecord),
+    timestamp: Date.now(),
+  };
+  return roomTypesCache.rows;
+}
+
+async function ensureRoomTypes(pool) {
+  const existingResult = await pool
+    .request()
+    .query(`SELECT id, name, description, total_rooms, base_rate FROM dbo.room_types;`);
+  const existingByName = new Map(existingResult.recordset.map((row) => [row.name, row]));
+  let changed = false;
+
+  for (const definition of DEFAULT_ROOM_TYPES) {
+    const existing = existingByName.get(definition.name);
+    if (!existing) {
+      const insert = pool.request();
+      insert.input('name', sql.NVarChar(120), definition.name);
+      insert.input('description', sql.NVarChar(500), definition.description || null);
+      insert.input('total_rooms', sql.Int, definition.totalRooms);
+      insert.input('base_rate', sql.Decimal(10, 2), definition.baseRate != null ? definition.baseRate : null);
+      await insert.query(
+        `INSERT INTO dbo.room_types (name, description, total_rooms, base_rate)
+         VALUES (@name, @description, @total_rooms, @base_rate);`
+      );
+      changed = true;
+      continue;
+    }
+
+    const updates = [];
+    const request = pool.request().input('id', sql.Int, existing.id);
+
+    if (Number(existing.total_rooms) !== Number(definition.totalRooms)) {
+      request.input('total_rooms', sql.Int, definition.totalRooms);
+      updates.push('total_rooms = @total_rooms');
+    }
+
+    if (
+      definition.baseRate != null &&
+      (existing.base_rate == null || Number(existing.base_rate) !== Number(definition.baseRate))
+    ) {
+      request.input('base_rate', sql.Decimal(10, 2), definition.baseRate);
+      updates.push('base_rate = @base_rate');
+    }
+
+    if (definition.description && definition.description !== existing.description) {
+      request.input('description', sql.NVarChar(500), definition.description);
+      updates.push('description = @description');
+    }
+
+    if (updates.length > 0) {
+      updates.push('updated_at = SYSUTCDATETIME()');
+      await request.query(`UPDATE dbo.room_types SET ${updates.join(', ')} WHERE id = @id;`);
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    invalidateRoomTypesCache();
+  }
+}
+
+async function getRoomTypeByName(pool, name) {
+  if (!name) {
+    return null;
+  }
+  const normalized = name.trim().toLowerCase();
+  const roomTypes = await loadRoomTypes(pool);
+  return roomTypes.find((roomType) => roomType.name.toLowerCase() === normalized) || null;
+}
+
+async function refreshSalesSummaryCache(pool) {
+  const reference = new Date();
+  for (const period of SALES_PERIODS) {
+    const { start, end } = calculateSalesPeriodRange(period, reference);
+    const totalResult = await pool
+      .request()
+      .input('start', sql.DateTime2, start)
+      .input('end', sql.DateTime2, end)
+      .query(
+        `SELECT SUM(payment_amount) AS total
+           FROM dbo.bookings
+          WHERE payment_received = 1
+            AND created_at >= @start
+            AND created_at < @end;`
+      );
+    const total = Number(totalResult.recordset[0]?.total || 0);
+    await pool
+      .request()
+      .input('period_type', sql.NVarChar(20), period.key)
+      .input('period_start', sql.DateTime2, start)
+      .input('period_end', sql.DateTime2, end)
+      .input('total_amount', sql.Decimal(12, 2), total)
+      .query(
+        `MERGE dbo.sales_summary AS target
+           USING (SELECT @period_type AS period_type) AS source
+           ON target.period_type = source.period_type
+         WHEN MATCHED THEN
+           UPDATE SET period_start = @period_start,
+                     period_end = @period_end,
+                     total_amount = @total_amount,
+                     updated_at = SYSUTCDATETIME()
+         WHEN NOT MATCHED THEN
+           INSERT (period_type, period_start, period_end, total_amount, updated_at)
+           VALUES (@period_type, @period_start, @period_end, @total_amount, SYSUTCDATETIME());`
+      );
+  }
+}
+
+function calculateSalesPeriodRange(period, referenceDate = new Date()) {
+  const end = new Date(referenceDate.getTime());
+  const start = new Date(referenceDate.getTime());
+
+  if (period.shift?.hours) {
+    start.setUTCHours(start.getUTCHours() - period.shift.hours);
+  }
+  if (period.shift?.days) {
+    start.setUTCDate(start.getUTCDate() - period.shift.days);
+  }
+  if (period.shift?.months) {
+    start.setUTCMonth(start.getUTCMonth() - period.shift.months);
+  }
+  if (period.shift?.years) {
+    start.setUTCFullYear(start.getUTCFullYear() - period.shift.years);
+  }
+
+  return { start, end };
+}
+
+function getPeriodDefinition(windowKey) {
+  return SALES_PERIODS.find((period) => period.key === windowKey) || SALES_PERIODS[0];
+}
+
+async function loadSalesSummaryMap(pool) {
+  const result = await pool
+    .request()
+    .query(
+      `SELECT period_type, period_start, period_end, total_amount, updated_at
+         FROM dbo.sales_summary;`
+    );
+  const map = new Map();
+  for (const row of result.recordset) {
+    map.set(row.period_type, row);
+  }
+  return map;
+}
+
+function mapBookingRow(row) {
+  return {
+    id: row.id,
+    fullName: row.full_name,
+    email: row.email,
+    phone: row.phone,
+    checkIn: row.check_in ? new Date(row.check_in).toISOString() : null,
+    checkOut: row.check_out ? new Date(row.check_out).toISOString() : null,
+    guests: row.guests,
+    roomType: row.room_type,
+    specialRequests: row.special_requests,
+    verificationCode: row.verification_code,
+    paymentMethod: row.payment_method,
+    paymentReference: row.payment_reference,
+    paymentAmount: Number(row.payment_amount || 0),
+    paymentReceived: Boolean(row.payment_received),
+    status: row.status,
+    source: row.source,
+    checkedInAt: row.checked_in_at ? new Date(row.checked_in_at).toISOString() : null,
+    checkedOutAt: row.checked_out_at ? new Date(row.checked_out_at).toISOString() : null,
+    createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
+  };
+}
+
+process.on('SIGINT', async () => {
+  await shutdown();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  await shutdown();
+  process.exit(0);
+});
+
+async function shutdown() {
+  try {
+    await connectionPool.close();
+    console.log('Closed SQL Server connection.');
+  } catch (error) {
+    console.error('Error closing SQL Server connection', error);
+  }
+}
+
+

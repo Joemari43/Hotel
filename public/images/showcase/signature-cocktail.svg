@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 720">
+  <defs>
+    <linearGradient id="cocktailBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1b2a49" />
+      <stop offset="100%" stop-color="#090f1c" />
+    </linearGradient>
+    <linearGradient id="glassGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f7f9fb" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#9aa9c2" stop-opacity="0.65" />
+    </linearGradient>
+    <linearGradient id="drinkGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f48924" />
+      <stop offset="100%" stop-color="#f7b733" />
+    </linearGradient>
+    <radialGradient id="lightBurst" cx="75%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#f7b733" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#f7b733" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="960" height="720" fill="url(#cocktailBg)" />
+  <circle cx="720" cy="180" r="260" fill="url(#lightBurst)" opacity="0.8" />
+  <g opacity="0.35">
+    <circle cx="180" cy="580" r="200" fill="#13203b" />
+    <circle cx="880" cy="600" r="160" fill="#0b1324" />
+  </g>
+  <g transform="translate(260 120)">
+    <ellipse cx="260" cy="460" rx="220" ry="60" fill="#03060e" opacity="0.6" />
+    <path
+      d="M140 36h240l-92 320v112h-56V356z"
+      fill="url(#glassGradient)"
+      opacity="0.75"
+    />
+    <path
+      d="M188 48h144l-64 224c-6 24-34 24-40 0z"
+      fill="url(#drinkGradient)"
+    />
+    <path
+      d="M196 48h128l-8 30H204z"
+      fill="#fef1d9"
+      opacity="0.65"
+    />
+    <circle cx="212" cy="82" r="10" fill="#fef1d9" opacity="0.7" />
+    <circle cx="324" cy="82" r="10" fill="#fef1d9" opacity="0.35" />
+    <path
+      d="M188 48h144l24-32H164z"
+      fill="#d7e0ea"
+      opacity="0.35"
+    />
+    <path
+      d="M224 468h72v12a12 12 0 0 1-12 12h-48a12 12 0 0 1-12-12z"
+      fill="#f7f9fb"
+      opacity="0.85"
+    />
+  </g>
+  <g transform="translate(540 180)">
+    <rect x="0" y="0" width="320" height="360" rx="40" fill="rgba(20, 93, 160, 0.15)" />
+    <text
+      x="160"
+      y="70"
+      font-family="'Inter', Arial, sans-serif"
+      font-size="48"
+      font-weight="600"
+      fill="#fefefe"
+      text-anchor="middle"
+      letter-spacing="0.12em"
+    >
+      BAR 22
+    </text>
+    <text
+      x="160"
+      y="120"
+      font-family="'Inter', Arial, sans-serif"
+      font-size="20"
+      fill="#f7f9fb"
+      text-anchor="middle"
+      opacity="0.8"
+    >
+      Signature Cocktail Program
+    </text>
+    <line x1="80" y1="140" x2="240" y2="140" stroke="#f7b733" stroke-width="3" stroke-linecap="round" />
+    <text
+      x="70"
+      y="190"
+      font-family="'Inter', Arial, sans-serif"
+      font-size="18"
+      fill="#f7f9fb"
+    >
+      •   Smoked Calamansi Old Fashioned
+    </text>
+    <text
+      x="70"
+      y="230"
+      font-family="'Inter', Arial, sans-serif"
+      font-size="18"
+      fill="#f7f9fb"
+    >
+      •   Hibiscus Sunset Spritz
+    </text>
+    <text
+      x="70"
+      y="270"
+      font-family="'Inter', Arial, sans-serif"
+      font-size="18"
+      fill="#f7f9fb"
+    >
+      •   Cold Brew Negroni
+    </text>
+    <text
+      x="70"
+      y="310"
+      font-family="'Inter', Arial, sans-serif"
+      font-size="18"
+      fill="#f7f9fb"
+    >
+      •   Cacao Nib Espresso Martini
+    </text>
+  </g>
+  <g fill="#fefefe" font-family="'Inter', Arial, sans-serif">
+    <text x="120" y="120" font-size="52" font-weight="700">
+      Sky Deck Cocktail Hour
+    </text>
+    <text x="120" y="170" font-size="24" opacity="0.85">
+      Crafted storytelling visuals for premium beverage upsell.
+    </text>
+  </g>
+</svg>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Harborview Hotel | Select Items</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar__inner">
+        <a class="brand" href="/hotel">Harborview Hotel</a>
+        <nav class="topbar__nav">
+          <a href="/hotel">About</a>
+          <a href="/rooms">Rooms</a>
+          <a href="/order" class="is-active">Order</a>
+          <a href="/admin">Staff Portal</a>
+          <a href="/book#booking">Book Now</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="menu-main">
+      <section class="menu-hero">
+        <div class="menu-hero__inner">
+          <p class="menu-hero__eyebrow">Harborview In-Room Dining</p>
+          <h1>Elevated tastes, delivered bedside</h1>
+          <p class="menu-hero__copy" id="menu-context-copy">
+            Select dishes, drinks, or amenities to include with your request.
+          </p>
+        </div>
+      </section>
+
+      <div class="menu-content">
+        <section class="menu-browser">
+          <header class="menu-browser__header">
+            <div
+              class="menu-filters"
+              id="menu-filters"
+              role="tablist"
+              aria-label="Menu categories"
+            ></div>
+            <div id="menu-feedback" class="form-feedback menu-feedback" aria-live="polite"></div>
+          </header>
+
+          <div id="menu-items" class="menu-gallery" role="list"></div>
+        </section>
+
+        <aside class="menu-summary" aria-label="Selected items summary">
+          <div class="menu-summary__card">
+            <header class="menu-summary__header">
+              <h2>Selected Items</h2>
+              <button
+                type="button"
+                class="link-btn menu-clear-btn is-hidden"
+                id="menu-clear-btn"
+              >
+                Clear all
+              </button>
+            </header>
+            <ul
+              id="menu-selection-list"
+              class="menu-selection__list"
+              aria-live="polite"
+              aria-label="Selected items"
+            ></ul>
+            <div class="menu-selection__actions">
+              <button type="button" class="secondary-btn" id="menu-cancel-btn">Back to order</button>
+              <button type="button" class="primary-btn" id="menu-submit-btn" disabled>
+                Add to request
+              </button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer__inner">
+        <div>
+          <strong>Harborview Hotel</strong>
+          <p class="text-muted">Sunrise Cove, The Esplanade, Barangay Mabini, Batangas</p>
+        </div>
+        <div>
+          <strong>Front Desk</strong>
+          <p class="text-muted">+63 917 555 0110</p>
+          <p class="text-muted">stay@harborview.ph</p>
+        </div>
+        <div>
+          <strong>Dining &amp; Services</strong>
+          <p class="text-muted">Press 2 on your in-room phone or message concierge in the app.</p>
+        </div>
+      </div>
+      <p class="footer__copy">&copy; <span id="menu-year"></span> Harborview Hospitality Inc.</p>
+    </footer>
+
+    <script src="menu.js" defer></script>
+  </body>
+</html>

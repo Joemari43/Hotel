@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320">
+  <defs>
+    <linearGradient id="drinkBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e2f5ff" />
+      <stop offset="100%" stop-color="#b8e4f9" />
+    </linearGradient>
+    <linearGradient id="glassGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#d2ecf7" stop-opacity="0.6" />
+    </linearGradient>
+    <linearGradient id="drinkFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffb274" />
+      <stop offset="100%" stop-color="#ff7b7b" />
+    </linearGradient>
+  </defs>
+  <rect width="480" height="320" fill="url(#drinkBg)" />
+  <g opacity="0.25" fill="#8ad4f6">
+    <circle cx="420" cy="80" r="120" />
+    <circle cx="90" cy="300" r="140" />
+  </g>
+  <g transform="translate(150 50)">
+    <ellipse cx="90" cy="230" rx="120" ry="36" fill="#57a2c6" opacity="0.35" />
+    <path
+      d="M36 0h108l-32 206c-2 14-14 26-28 26h-12c-14 0-26-12-28-26z"
+      fill="url(#glassGradient)"
+    />
+    <path
+      d="M46 20h88l-26 160c-2 10-10 18-20 18h-16c-10 0-18-8-20-18z"
+      fill="url(#drinkFill)"
+    />
+    <rect x="84" y="0" width="12" height="180" rx="6" fill="#8ed1e8" />
+    <path
+      d="M52 20h76l6-12H46z"
+      fill="#ffffff"
+      opacity="0.6"
+    />
+    <circle cx="94" cy="36" r="8" fill="#ffffff" opacity="0.6" />
+  </g>
+  <g transform="translate(250 70)">
+    <ellipse cx="90" cy="210" rx="90" ry="26" fill="#4c90b4" opacity="0.3" />
+    <path
+      d="M52 40h76l-16 112c-2 12-10 20-22 20h-16c-12 0-20-8-22-20z"
+      fill="url(#glassGradient)"
+    />
+    <path
+      d="M60 60h60l-12 72c-2 8-8 14-16 14h-12c-8 0-14-6-16-14z"
+      fill="#7fe0d4"
+    />
+    <circle cx="90" cy="68" r="8" fill="#ffffff" opacity="0.8" />
+    <rect x="80" y="8" width="10" height="52" rx="5" fill="#8ed1e8" />
+  </g>
+  <text
+    x="46"
+    y="60"
+    font-family="'Inter', Arial, sans-serif"
+    font-size="24"
+    font-weight="600"
+    fill="#1b6d93"
+  >
+    Beverage Program
+  </text>
+</svg>

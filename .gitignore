@@ -1,0 +1,6 @@
+node_modules/
+*.log
+.env
+temp.patch
+temp_room.patch
+temp_seed.patch

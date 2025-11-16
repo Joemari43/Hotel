@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Harborview Hotel | Book Your Stay</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar__inner">
+        <a class="brand" href="/hotel">Harborview Hotel</a>
+        <nav class="topbar__nav">
+          <a href="/hotel">About</a>
+          <a href="/rooms">Rooms</a>
+          <a href="/order">Order</a>
+          <a href="/service">Service</a>
+          <a href="/admin">Staff Portal</a>
+          <a href="#booking">Book Now</a>
+        </nav>
+      </div>
+    </header>
+
+    <header class="hero">
+      <div class="hero__overlay"></div>
+      <div class="hero__content">
+        <h1>Harborview Hotel</h1>
+        <p>Tailored coastal escapes with concierge service, verified instantly for genuine stays.</p>
+      </div>
+    </header>
+
+    <main class="container">
+      <section id="booking" class="booking-card">
+        <div class="booking-card__intro">
+          <h2>Reserve Your Room</h2>
+          <p>
+            Choose your suite, add the touches that matter, and confirm with a quick one-time code.
+            Every reservation is protected and personally managed by our Harborview hosts.
+          </p>
+        </div>
+
+        <form id="booking-form" novalidate>
+          <div class="form-grid">
+            <label class="form-field">
+              <span>Full name*</span>
+              <input type="text" id="fullName" name="fullName" maxlength="120" required />
+            </label>
+
+            <label class="form-field">
+              <span>Email address*</span>
+              <input type="email" id="email" name="email" maxlength="120" required />
+            </label>
+
+            <label class="form-field">
+              <span>Phone number*</span>
+              <input type="tel" id="phone" name="phone" maxlength="25" required />
+            </label>
+
+            <label class="form-field">
+              <span>Check-in date*</span>
+              <input type="date" id="checkIn" name="checkIn" required />
+            </label>
+
+            <label class="form-field">
+              <span>Check-out date*</span>
+              <input type="date" id="checkOut" name="checkOut" required />
+            </label>
+
+            <label class="form-field">
+              <span>Guests*</span>
+              <input type="number" id="guests" name="guests" min="1" max="8" required />
+            </label>
+
+            <label class="form-field">
+              <span>Room type*</span>
+              <select id="roomType" name="roomType" required>
+                <option value="">Select a room</option>
+                <option value="Deluxe King">Deluxe King</option>
+                <option value="Twin Suite">Twin Suite</option>
+                <option value="Ocean View Loft">Ocean View Loft</option>
+                <option value="Garden Retreat">Garden Retreat</option>
+              </select>
+            </label>
+
+            <label class="form-field form-field--span">
+              <span>Special requests</span>
+              <textarea id="specialRequests" name="specialRequests" rows="3" maxlength="500"></textarea>
+            </label>
+          </div>
+
+          <section class="payment-card">
+            <div class="payment-card__header">
+              <h3>Secure Your Stay</h3>
+              <p>
+                Submit a PHP <span class="deposit-amount" id="deposit-amount-display"></span> down payment
+                via GCash, PayMaya, or credit card. Share the reference details below so our team can
+                verify and lock in your reservation.
+              </p>
+            </div>
+            <div class="payment-grid">
+            <div class="payment-instructions">
+              <p><strong>GCash</strong> · 0997 607 8392 · Harborview Hospitality Inc.</p>
+              <p><strong>PayMaya</strong> · 0918 444 0456 · Harborview Hospitality Inc.</p>
+              <p>
+                <strong>Credit Card</strong> · Provide the approval/authorization code or last four digits.
+              </p>
+              <p class="payment-note">
+                Your reservation remains tentative until the deposit is received. Deposits are
+                deductible from your stay total and refundable per our 72-hour cancellation policy.
+              </p>
+              <div class="payment-actions">
+                <button type="button" id="gcash-payment-btn" class="outline-btn">
+                  Generate GCash Payment Link
+                </button>
+                <p class="payment-actions__hint">
+                  We will open a secure PayMongo checkout in a new tab. After paying, copy the GCash
+                  reference number—we’ll store it automatically when available.
+                </p>
+              </div>
+            </div>
+            <div class="payment-fields">
+              <label class="form-field">
+                <span>Payment method*</span>
+                <select id="paymentMethod" name="paymentMethod" required>
+                    <option value="">Choose a method</option>
+                    <option value="GCash">GCash</option>
+                    <option value="PayMaya">PayMaya</option>
+                    <option value="Credit Card">Credit Card</option>
+                  </select>
+                </label>
+                <label class="form-field">
+                  <span>Payment reference*</span>
+                  <input
+                    type="text"
+                    id="paymentReference"
+                    name="paymentReference"
+                    maxlength="80"
+                    placeholder="GCash Ref No., PayMaya Trace ID, or credit card approval code"
+                    required
+                  />
+                </label>
+                <label class="form-field">
+                  <span>Deposit amount (PHP)*</span>
+                  <input
+                    type="number"
+                    id="paymentAmount"
+                    name="paymentAmount"
+                    min="0"
+                    step="0.01"
+                    required
+                  />
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <div class="verification-strip">
+            <div class="verification-strip__content">
+              <label class="form-field">
+                <span>Verification code*</span>
+                <input
+                  type="text"
+                  id="verificationCode"
+                  name="verificationCode"
+                  maxlength="6"
+                  inputmode="numeric"
+                  required
+                  autocomplete="one-time-code"
+                />
+              </label>
+              <p class="verification-strip__hint">
+                We email a six-digit code to confirm your booking comes from a real guest.
+              </p>
+            </div>
+            <button type="button" id="send-code-btn" class="secondary-btn">Send Code</button>
+          </div>
+
+          <div id="feedback" role="status" aria-live="polite"></div>
+
+          <button type="submit" class="primary-btn">Confirm Booking</button>
+        </form>
+      </section>
+
+      <section class="info-grid">
+        <article>
+          <h3>Secure Reservations</h3>
+          <p>
+            Every booking is tied to a verified email address, stopping fake reservations before
+            they reach our calendar.
+          </p>
+        </article>
+        <article>
+          <h3>Concierge Support</h3>
+          <p>
+            Need something special? Add your requests, and our concierge will follow up before you
+            arrive.
+          </p>
+        </article>
+        <article>
+          <h3>Flexible Stays</h3>
+          <p>
+            Adjust your plans easily by contacting us with your booking ID and verified email.
+          </p>
+        </article>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; <span id="year"></span> Harborview Hotel. All rights reserved.</p>
+      <p>Questions? Email <a href="mailto:stay@harborview.example">stay@harborview.example</a></p>
+    </footer>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>

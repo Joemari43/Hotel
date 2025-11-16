@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320">
+  <defs>
+    <linearGradient id="benedictBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5f1fb" />
+      <stop offset="100%" stop-color="#e3d4fa" />
+    </linearGradient>
+  </defs>
+  <rect width="480" height="320" fill="url(#benedictBg)" />
+  <g opacity="0.3" fill="#c3a8f4">
+    <circle cx="440" cy="90" r="110" />
+    <circle cx="90" cy="280" r="140" />
+  </g>
+  <g transform="translate(80 60)">
+    <ellipse cx="160" cy="200" rx="160" ry="50" fill="#ad93dd" opacity="0.3" />
+    <ellipse cx="160" cy="148" rx="150" ry="64" fill="#f4e8d7" stroke="#c2b7aa" stroke-width="8" />
+    <g transform="translate(48 60)">
+      <path
+        d="M72 82c36-24 132-24 168 0 18 12 14 30-10 36-54 14-116 14-160 0-22-6-24-28 2-36z"
+        fill="#f6c35c"
+      />
+      <path
+        d="M68 52c12-24 68-42 116-34 36 6 52 28 26 52-22 18-82 20-120 14-14-2-26-14-22-32z"
+        fill="#f59a61"
+      />
+      <ellipse cx="96" cy="58" rx="38" ry="26" fill="#fdf0c8" />
+      <ellipse cx="158" cy="48" rx="36" ry="26" fill="#fdecc2" />
+      <path d="M80 40c14-20 38-24 52-8-4 12-18 22-52 8z" fill="#fef6db" />
+      <path d="M144 36c16-16 38-16 48 2-6 12-22 18-48-2z" fill="#fff3d4" />
+    </g>
+    <g fill="#de4f3d">
+      <circle cx="140" cy="120" r="10" />
+      <circle cx="210" cx="210" cy="134" r="9" />
+      <circle cx="180" cy="152" r="8" />
+    </g>
+    <g fill="#76b587">
+      <path d="M96 134c18-18 34-16 38 4-10 8-24 10-38-4z" />
+      <path d="M204 170c16-10 30-10 36 6-12 6-24 6-36-6z" />
+    </g>
+  </g>
+  <text
+    x="40"
+    y="60"
+    font-family="'Inter', Arial, sans-serif"
+    font-size="24"
+    font-weight="600"
+    fill="#6a4fbf"
+  >
+    Lobster Benedict
+  </text>
+</svg>
