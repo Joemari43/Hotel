@@ -7,6 +7,7 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "seed": "node scripts/seed-sample-data.js",
+    "deploy:github": "node scripts/deploy-to-github.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
