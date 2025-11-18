@@ -98,18 +98,6 @@ Modern, email-verified hotel booking experience that requires no user registrati
 
    Visit http://localhost:3000 to explore the Harborview landing page, or jump straight to the booking form at http://localhost:3000/book#booking. Verification codes and reservations are stored in SQL Server.
 
-## Automated GitHub Deployment
-
-Use the helper script to stage, commit, and push everything in one command:
-
-```bash
-npm run deploy:github -- "feat: describe the work you are publishing"
-```
-
-- If you omit the quoted message, the script falls back to `chore: deploy <timestamp>`.
-- The script aborts gracefully when the working tree is already clean or when `origin` is not configured yet.
-- Under the hood it runs `git add --all`, `git commit -m "<message>"`, and `git push origin HEAD`, so make sure any secret files (like `.env`) remain ignored before running it.
-
 ## Sample Data
 
 - Populate demo reservations and verification codes with `npm run seed`. The script removes prior `SAMPLE-*` records before inserting fresh data so it is safe to run repeatedly.
