@@ -111,6 +111,20 @@ npm run deploy:github -- "feat: describe the work you are publishing"
 - Embedded Git repositories (for example, a nested project that has its own `.git` folder) are detected and must be ignored or converted to submodules before the script proceeds.
 - Under the hood it runs `git add --all`, `git commit -m "<message>"`, and `git push origin HEAD`, so make sure any sensitive files (like `.env`) stay excluded via `.gitignore` first.
 
+### Render auto-deploy workflow
+
+The repo also defines `.github/workflows/render-deploy.yml`, which:
+
+- Runs on every push to `main` (and can be triggered manually via GitHub’s “Run workflow” button).
+- Executes `npm ci` and `npm test` before deploying, so the Render build is only triggered when dependencies install cleanly and the test command passes. Feel free to swap out the `npm test` step for your preferred checks.
+- Hits the Render deploy hook URL stored in the `RENDER_DEPLOY_HOOK` repository secret.
+
+To enable it:
+
+1. In Render → Service → **Settings → Deploy Hook**, copy the hook URL.
+2. In your GitHub repo → **Settings → Secrets and variables → Actions**, create a new secret named `RENDER_DEPLOY_HOOK` with that URL.
+3. Push to `main` (or run the workflow manually). Passing CI automatically triggers a fresh Render deploy.
+
 ## Sample Data
 
 - Populate demo reservations and verification codes with `npm run seed`. The script removes prior `SAMPLE-*` records before inserting fresh data so it is safe to run repeatedly.

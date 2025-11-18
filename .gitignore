@@ -1,5 +1,6 @@
 node_modules/
 *.log
+Hotel/
 temp.patch
 temp_room.patch
 temp_seed.patch
