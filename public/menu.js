@@ -612,7 +612,10 @@ function renderSelection() {
       if (item.price) {
         metaParts.push(item.price);
       }
-      const metaText = metaParts.join(' • ');
+      const metaLabel =
+        metaParts.length > 0
+          ? metaParts.map((part) => escapeHtml(part)).join(' &bull; ')
+          : '';
       const ariaAdd = escapeHtml(`Add one ${item.name}`);
       const ariaRemoveOne = escapeHtml(`Remove one ${item.name}`);
 
@@ -620,7 +623,7 @@ function renderSelection() {
         <li class="menu-selection__item" data-id="${escapeHtml(item.id)}">
           <div class="menu-selection__info">
             <strong>${escapeHtml(item.name)}</strong>
-            ${metaText ? `<span class="text-muted">${escapeHtml(metaText)}</span>` : ''}
+            ${metaLabel ? `<span class="text-muted">${metaLabel}</span>` : ''}
           </div>
           <div class="menu-selection__controls">
             <button type="button" class="menu-stepper" data-action="decrement" data-id="${escapeHtml(
