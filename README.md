@@ -156,6 +156,16 @@ GitHub Pages can host the HTML/CSS/JS bundle in `public/` so you have an instant
 
 Whenever you change anything under `public/`, run `npm run pages:sync` again and commit the updated `docs/` contents so GitHub Pages stays current.
 
+### Automated GitHub Pages publishing
+
+If you prefer CI to handle publishing, keep the new workflow `.github/workflows/pages-deploy.yml` enabled. On every push to `main` that touches `public/`, `docs/`, or the sync script, it:
+
+1. Checks out the repo and installs dependencies with `npm ci`.
+2. Runs `npm run pages:sync` so `docs/` is rebuilt in the workflow runner.
+3. Uploads `docs/` as a Pages artifact and deploys it via `actions/deploy-pages`.
+
+Because Pages pulls the artifact straight from CI, you don’t have to commit `docs/` for publishing—only when you need a local preview. The workflow uses Node.js 18; adjust the version or trigger paths to match your process.
+
 ## Hosting the Node/Express Backend (Render example)
 
 1. **Rotate secrets locally**
