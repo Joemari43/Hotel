@@ -4,3 +4,7 @@ Hotel/
 temp.patch
 temp_room.patch
 temp_seed.patch
+.env
+.env.*
+!.env.example
+/data/*.db
