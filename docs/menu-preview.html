@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Harborview Hotel | Buyer Presentation</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="navigation.js" defer></script>
+    <style>
+      .preview-hero {
+        width: min(1100px, calc(100% - 3rem));
+        margin: 5rem auto 3rem;
+        display: grid;
+        gap: 1.5rem;
+        text-align: center;
+      }
+
+      .preview-hero h1 {
+        margin: 0;
+        font-size: clamp(2.4rem, 4vw, 3.5rem);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .preview-hero p {
+        margin: 0 auto;
+        max-width: 680px;
+        color: var(--text-muted);
+        font-size: 1.05rem;
+      }
+
+      .preview-grid {
+        width: min(1100px, calc(100% - 3rem));
+        margin: 0 auto 6rem;
+        display: grid;
+        gap: 2.5rem;
+      }
+
+      .preview-card {
+        display: grid;
+        gap: 1.5rem;
+        background: var(--surface);
+        border-radius: 28px;
+        padding: 2.5rem;
+        align-items: center;
+        box-shadow: var(--shadow);
+      }
+
+      .preview-card__body {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .preview-card h2 {
+        margin: 0;
+        font-size: clamp(1.8rem, 3vw, 2.4rem);
+      }
+
+      .preview-card p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 1.05rem;
+        line-height: 1.8;
+      }
+
+      .preview-card__meta {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        font-weight: 600;
+        color: var(--primary-dark);
+      }
+
+      .preview-card__media {
+        border-radius: 20px;
+        overflow: hidden;
+        background: rgba(20, 93, 160, 0.12);
+      }
+
+      .preview-card__media img {
+        width: 100%;
+        display: block;
+      }
+
+      @media (min-width: 900px) {
+        .preview-card {
+          grid-template-columns: 1.1fr 1fr;
+        }
+
+        .preview-card:nth-of-type(even) {
+          grid-template-columns: 1fr 1.1fr;
+        }
+
+        .preview-card:nth-of-type(even) .preview-card__media {
+          order: -1;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .preview-hero {
+          width: calc(100% - 2rem);
+          margin-top: 3.5rem;
+        }
+
+        .preview-grid {
+          width: calc(100% - 2rem);
+          gap: 2rem;
+        }
+
+        .preview-card {
+          padding: 1.75rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar__inner">
+        <a class="brand" href="/hotel">Harborview Hotel</a>
+        <button class="topbar__toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+          <span class="topbar__toggle-icon" aria-hidden="true"></span>
+          <span class="topbar__toggle-label">Menu</span>
+        </button>
+        <nav class="topbar__nav" id="site-nav">
+          <a href="/hotel">About</a>
+          <a href="/rooms">Rooms</a>
+          <a href="/order">Order</a>
+          <a href="/service">Service</a>
+          <a href="/admin">Staff Portal</a>
+          <a href="/book#booking">Book Now</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="preview-hero">
+        <h1>Harborview Guest Experience Suite</h1>
+        <p>
+          A curated visual set to present the in-room dining, beverage, and wellness programs to
+          stakeholders and partners. Each panel demonstrates the finished look guests will see across
+          printed collateral and tablet menus.
+        </p>
+      </section>
+
+      <section class="preview-grid">
+        <article class="preview-card">
+          <div class="preview-card__body">
+            <h2>In-Room Dining Showcase</h2>
+            <p>
+              Hero artwork illustrating plated entr&eacute;es, chef recommendations, and the
+              under-30-minute delivery promise. Use this panel for quick executive reviews and investor
+              briefings to highlight service speed and premium plating.
+            </p>
+            <div class="preview-card__meta">
+              <span>Use: Buyer deck</span>
+              <span>Format: 4K SVG</span>
+              <span>Theme: Maritime luxury</span>
+            </div>
+          </div>
+          <div class="preview-card__media">
+            <img src="images/showcase/in-room-dining.svg" alt="In-room dining presentation artwork" />
+          </div>
+        </article>
+
+        <article class="preview-card">
+          <div class="preview-card__body">
+            <h2>Sky Deck Cocktail Hour</h2>
+            <p>
+              Vibrant nightscape for premium beverage upsells featuring the Sky Deck bar identity,
+              signature cocktail list, and a luminous backdrop. Ideal for bar program proposals and
+              promotional signage mockups.
+            </p>
+            <div class="preview-card__meta">
+              <span>Use: Beverage buyers</span>
+              <span>Format: 4K SVG</span>
+              <span>Theme: Elevated mixology</span>
+            </div>
+          </div>
+          <div class="preview-card__media">
+            <img
+              src="images/showcase/signature-cocktail.svg"
+              alt="Signature cocktail presentation artwork"
+            />
+          </div>
+        </article>
+
+        <article class="preview-card">
+          <div class="preview-card__body">
+            <h2>Wellness & Amenities Experience</h2>
+            <p>
+              Spa-inspired canvas highlighting the Serenity Spa journey, hero amenities, and call-to-action for
+              premium treatment reservations. Use this when presenting cross-sell opportunities to hospitality
+              partners and wellness buyers.
+            </p>
+            <div class="preview-card__meta">
+              <span>Use: Wellness partners</span>
+              <span>Format: 4K SVG</span>
+              <span>Theme: Coastal calm</span>
+            </div>
+          </div>
+          <div class="preview-card__media">
+            <img src="images/showcase/spa-wellness.svg" alt="Spa and wellness presentation artwork" />
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer__inner">
+        <div>
+          <strong>Harborview Hotel</strong>
+          <p class="text-muted">Sunrise Cove, The Esplanade, Barangay Mabini, Batangas</p>
+        </div>
+        <div>
+          <strong>Front Desk</strong>
+          <p class="text-muted">+63 917 555 0110</p>
+          <p class="text-muted">stay@harborview.ph</p>
+        </div>
+        <div>
+          <strong>Dining &amp; Services</strong>
+          <p class="text-muted">Press 2 on your in-room phone or message concierge in the app.</p>
+        </div>
+      </div>
+      <p class="footer__copy">&copy; <span id="preview-year"></span> Harborview Hospitality Inc.</p>
+    </footer>
+
+    <script>
+      const previewYear = document.getElementById('preview-year');
+      if (previewYear) {
+        previewYear.textContent = new Date().getFullYear();
+      }
+    </script>
+  </body>
+</html>

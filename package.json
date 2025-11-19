@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "seed": "node scripts/seed-sample-data.js",
     "deploy:github": "node scripts/deploy-to-github.js",
+    "pages:sync": "node scripts/sync-public-to-docs.js",
     "test": "echo \"Tests skipped\""
   },
   "keywords": [],

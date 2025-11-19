@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <defs>
+    <linearGradient id="gr-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1c6f57" />
+      <stop offset="100%" stop-color="#7bbf69" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#gr-gradient)" />
+  <g fill="#ffffff" opacity="0.8">
+    <rect x="180" y="520" width="840" height="120" rx="20" />
+  </g>
+  <text x="210" y="590" font-family="Inter, sans-serif" font-size="66" fill="#ffffff" opacity="0.95">
+    Garden Retreat
+  </text>
+  <text x="210" y="200" font-family="Inter, sans-serif" font-size="44" fill="#e8ffef" opacity="0.88">
+    Private Patio · Aromatherapy Turndown · Lush Greens
+  </text>
+</svg>

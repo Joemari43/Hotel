@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320">
+  <defs>
+    <linearGradient id="lateNightBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1d2a44" />
+      <stop offset="100%" stop-color="#314b78" />
+    </linearGradient>
+    <linearGradient id="latePlate" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0f4ff" />
+      <stop offset="100%" stop-color="#d9e4ff" />
+    </linearGradient>
+  </defs>
+  <rect width="480" height="320" fill="url(#lateNightBg)" />
+  <g opacity="0.4" fill="#24355a">
+    <circle cx="430" cy="80" r="120" />
+    <circle cx="80" cy="300" r="160" />
+  </g>
+  <g transform="translate(60 70)">
+    <ellipse cx="180" cy="190" rx="180" ry="52" fill="#101a2f" opacity="0.45" />
+    <ellipse cx="180" cy="140" rx="168" ry="76" fill="url(#latePlate)" stroke="#b8c5e2" stroke-width="8" />
+    <g transform="translate(40 50)">
+      <path
+        d="M56 84c20-32 216-44 252-18 24 18 8 40-34 46-88 12-212 10-218-28z"
+        fill="#f0d07f"
+      />
+      <path
+        d="M104 54c20-26 98-40 140-24 38 12 48 40 12 60-42 24-156 12-152-36z"
+        fill="#f8b354"
+      />
+      <path
+        d="M156 70c12-18 44-24 62-12 18 10 12 34-12 40-26 6-68-6-50-28z"
+        fill="#f4ede0"
+      />
+      <path
+        d="M118 104c16-10 36-8 42 6-10 6-24 8-42-6z"
+        fill="#f97c5c"
+      />
+      <path
+        d="M210 100c18-10 32-8 38 6-12 6-24 6-38-6z"
+        fill="#f97c5c"
+      />
+    </g>
+    <g fill="#fce177">
+      <circle cx="152" cy="128" r="10" />
+      <circle cx="230" cy="146" r="9" />
+      <circle cx="192" cy="164" r="8" />
+    </g>
+    <g fill="#6fc18c">
+      <path d="M110 148c16-12 30-10 36 6-12 6-24 6-36-6z" />
+      <path d="M210 180c18-12 34-10 40 6-18 6-30 6-40-6z" />
+    </g>
+  </g>
+  <text
+    x="50"
+    y="60"
+    font-family="'Inter', Arial, sans-serif"
+    font-size="24"
+    font-weight="600"
+    fill="#f0f5ff"
+  >
+    Late-Night Favorites
+  </text>
+  <g fill="#f6d365" opacity="0.7">
+    <circle cx="380" cy="60" r="6" />
+    <circle cx="360" cy="40" r="4" />
+    <circle cx="340" cy="70" r="4" />
+    <circle cx="400" cy="90" r="5" />
+    <circle cx="360" cy="110" r="3" />
+  </g>
+</svg>

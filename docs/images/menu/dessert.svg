@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320">
+  <defs>
+    <linearGradient id="dessertBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff0fa" />
+      <stop offset="100%" stop-color="#f7c5e0" />
+    </linearGradient>
+  </defs>
+  <rect width="480" height="320" fill="url(#dessertBg)" />
+  <g opacity="0.3" fill="#f299c3">
+    <circle cx="420" cy="90" r="110" />
+    <circle cx="100" cy="290" r="140" />
+  </g>
+  <g transform="translate(80 60)">
+    <ellipse cx="160" cy="200" rx="160" ry="48" fill="#d374a9" opacity="0.3" />
+    <ellipse cx="160" cy="148" rx="150" ry="66" fill="#fff6fb" stroke="#ecc4d8" stroke-width="8" />
+    <g transform="translate(40 50)">
+      <path
+        d="M48 92c16-34 196-44 232-16 22 18 10 42-30 48-82 12-198 0-202-32z"
+        fill="#fbd4e7"
+      />
+      <path
+        d="M84 60c14-24 72-40 112-32 42 10 52 40 18 62-44 28-158 14-130-30z"
+        fill="#f7a6c9"
+      />
+      <ellipse cx="128" cy="66" rx="42" ry="24" fill="#fef0f6" />
+      <ellipse cx="184" cy="58" rx="36" ry="22" fill="#fde4ef" />
+    </g>
+    <g fill="#f97c8c">
+      <circle cx="128" cy="126" r="10" />
+      <circle cx="186" cy="136" r="9" />
+      <circle cx="216" cy="156" r="8" />
+    </g>
+    <g fill="#ffd36a">
+      <path d="M120 150c16-12 30-10 36 6-12 6-24 6-36-6z" />
+      <path d="M200 170c18-10 30-8 34 6-12 4-22 4-34-6z" />
+    </g>
+  </g>
+  <text
+    x="46"
+    y="60"
+    font-family="'Inter', Arial, sans-serif"
+    font-size="24"
+    font-weight="600"
+    fill="#b44a7c"
+  >
+    Dessert Collection
+  </text>
+</svg>

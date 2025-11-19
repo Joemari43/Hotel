@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320">
+  <defs>
+    <linearGradient id="congeeBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eef6ff" />
+      <stop offset="100%" stop-color="#d4e7ff" />
+    </linearGradient>
+  </defs>
+  <rect width="480" height="320" fill="url(#congeeBg)" />
+  <g opacity="0.28" fill="#a9cbef">
+    <circle cx="430" cy="80" r="100" />
+    <circle cx="110" cy="290" r="150" />
+  </g>
+  <g transform="translate(70 60)">
+    <ellipse cx="170" cy="196" rx="170" ry="52" fill="#7aa5d6" opacity="0.3" />
+    <ellipse cx="170" cy="148" rx="150" ry="66" fill="#f5f9fc" stroke="#c6d7e6" stroke-width="8" />
+    <ellipse cx="170" cy="140" rx="120" ry="44" fill="#edf3f8" />
+    <path
+      d="M82 132c10-32 60-52 112-48 54 4 90 32 80 58-20 52-170 46-192-10z"
+      fill="#e2ecf3"
+    />
+    <g fill="#ffce5c">
+      <ellipse cx="170" cy="126" rx="36" ry="20" />
+      <circle cx="210" cy="132" r="10" />
+      <circle cx="140" cy="118" r="8" />
+    </g>
+    <g fill="#e07a4c">
+      <circle cx="126" cy="150" r="9" />
+      <circle cx="214" cy="158" r="8" />
+      <circle cx="192" cy="140" r="7" />
+    </g>
+    <g fill="#70b27d">
+      <path d="M126 132c14-14 30-16 34-2-10 10-22 12-34-2z" />
+      <path d="M214 148c12-10 24-10 30 4-10 6-20 6-30-4z" />
+      <path d="M174 172c16-8 28-6 32 6-12 6-22 4-32-6z" />
+    </g>
+  </g>
+  <text
+    x="44"
+    y="60"
+    font-family="'Inter', Arial, sans-serif"
+    font-size="24"
+    font-weight="600"
+    fill="#3e6ea3"
+  >
+    Seaside Congee
+  </text>
+</svg>

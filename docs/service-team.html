@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Service Team Portal</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="navigation.js" defer></script>
+  </head>
+  <body class="page--service-team">
+    <header class="topbar">
+      <div class="topbar__inner">
+        <a class="brand" href="/hotel">Harborview Hotel</a>
+        <button class="topbar__toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+          <span class="topbar__toggle-icon" aria-hidden="true"></span>
+          <span class="topbar__toggle-label">Menu</span>
+        </button>
+        <nav class="topbar__nav" id="site-nav">
+          <a href="/hotel">About</a>
+          <a href="/rooms">Rooms</a>
+          <a href="/order">Order</a>
+          <a href="/service">Service</a>
+          <a href="/service-team" class="is-active">Service Team</a>
+          <a href="/admin">Staff Portal</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="service-team-container">
+      <section id="service-login-card" class="portal-card">
+        <h1>Service Team Access</h1>
+        <p class="portal-text">
+          Sign in with your housekeeping or maintenance credentials to view current guest requests and
+          room tasks.
+        </p>
+        <form id="service-login-form" class="portal-form">
+          <label>
+            <span>Username</span>
+            <input type="text" name="username" autocomplete="username" required />
+          </label>
+          <label>
+            <span>Password</span>
+            <input type="password" name="password" autocomplete="current-password" required />
+          </label>
+          <button type="submit" class="primary-btn">Sign In</button>
+        </form>
+        <div id="service-login-feedback" class="portal-feedback" aria-live="polite"></div>
+      </section>
+
+      <section id="service-dashboard" class="portal-card is-hidden" aria-live="polite">
+        <div class="portal-dashboard-header">
+          <div>
+            <h1 id="portal-heading">Service Dashboard</h1>
+            <p id="portal-subtitle">
+              Monitor new guest requests, acknowledge assignments, and keep rooms ready for arrival.
+            </p>
+            <div class="portal-pill">
+              Signed in as <span id="portal-username"></span> · <span id="portal-role"></span>
+            </div>
+          </div>
+          <div class="portal-actions">
+            <button type="button" id="portal-refresh" class="secondary-btn">Refresh</button>
+            <button type="button" id="portal-logout" class="secondary-btn">Log out</button>
+          </div>
+        </div>
+
+        <section class="portal-subcard">
+          <header class="portal-subcard__header">
+            <div>
+              <h2>Guest Requests</h2>
+              <p class="portal-muted">
+                Orders submitted from the guest portal and routed to your department.
+              </p>
+            </div>
+          </header>
+          <div id="orders-feedback" class="portal-feedback" aria-live="polite"></div>
+          <div class="portal-table-wrapper">
+            <table class="portal-table">
+              <thead>
+                <tr>
+              <th>Created</th>
+              <th>Request</th>
+              <th>Guest</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table-body">
+            <tr>
+              <td colspan="5" class="text-muted">No requests loaded yet.</td>
+            </tr>
+          </tbody>
+        </table>
+          </div>
+        </section>
+
+        <section class="portal-subcard">
+          <header class="portal-subcard__header">
+            <div>
+              <h2>Room Tasks</h2>
+              <p class="portal-muted">
+                Active service tasks assigned to your team for follow-up and completion.
+              </p>
+            </div>
+          </header>
+          <div id="tasks-feedback" class="portal-feedback" aria-live="polite"></div>
+          <div class="portal-table-wrapper">
+            <table class="portal-table">
+              <thead>
+                <tr>
+                  <th>Room</th>
+                  <th>Details</th>
+                  <th>Priority</th>
+                  <th>Schedule</th>
+                </tr>
+              </thead>
+              <tbody id="tasks-table-body">
+                <tr>
+                  <td colspan="4" class="text-muted">No tasks loaded yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="service-team.js" defer></script>
+  </body>
+</html>

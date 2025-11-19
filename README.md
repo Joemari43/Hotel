@@ -125,6 +125,71 @@ To enable it:
 2. In your GitHub repo → **Settings → Secrets and variables → Actions**, create a new secret named `RENDER_DEPLOY_HOOK` with that URL.
 3. Push to `main` (or run the workflow manually). Passing CI automatically triggers a fresh Render deploy.
 
+## GitHub Pages for the Static Frontend
+
+GitHub Pages can host the HTML/CSS/JS bundle in `public/` so you have an instantly shareable preview:
+
+1. **Mirror `public/` into `docs/`**
+
+   ```bash
+   npm run pages:sync
+   ```
+
+   This script recreates the `docs/` directory with the latest static files.
+
+2. **Commit and push**
+
+   ```bash
+   git add docs package.json package-lock.json scripts/sync-public-to-docs.js
+   git commit -m "Update docs folder for GitHub Pages"
+   git push origin main
+   ```
+
+3. **Enable Pages**
+   - On GitHub open **Settings → Pages**.
+   - Choose the `main` branch and the `/docs` folder, then save.
+   - GitHub prints the public URL (usually `https://<username>.github.io/<repo>/`) once the build finishes.
+
+4. **Browse the static portal**
+   - All landing pages, menu previews, and the booking form now load globally from GitHub’s CDN.
+   - API calls still point to `/api/...`, so host the backend separately (Render/Railway/etc.) and, if needed, update fetch URLs or put the backend behind the same domain via reverse proxy.
+
+Whenever you change anything under `public/`, run `npm run pages:sync` again and commit the updated `docs/` contents so GitHub Pages stays current.
+
+## Hosting the Node/Express Backend (Render example)
+
+1. **Rotate secrets locally**
+   - Generate fresh credentials for SQL Server, JWT secret, SMTP, and default staff logins.
+   - Update `.env` with the new values (never commit this file).
+
+2. **Push sanitized code**
+
+   ```bash
+   git status   # should show no secrets
+   git push origin main
+   ```
+
+3. **Create the Render service**
+   - Render dashboard → *New → Web Service* → pick this GitHub repo.
+   - Build command: `npm install`
+   - Start command: `npm start`
+   - Select the closest region to your SQL Server or your users.
+
+4. **Configure environment variables**
+   - In the Render service settings, add every key from your local `.env` (SQL credentials, SMTP, JWT, default passwords, PayMongo keys, etc.).
+   - Use the rotated secrets you created in step 1.
+
+5. **Ensure database connectivity**
+   - Allow Render’s outbound IP through your SQL Server firewall **or** migrate SQL Server to a host Render can reach.
+   - Update `SQL_SERVER`, `SQL_PORT`, or `SQL_CONNECTION_STRING` accordingly.
+
+6. **Deploy and verify**
+   - Trigger a deploy from the Render dashboard.
+   - Hit the health endpoint (e.g., `https://<your-service>.onrender.com/health`) to confirm it is running.
+   - Point your static frontend (GitHub Pages or any other host) to the new backend URL.
+
+You can replicate the same process on Railway, Fly.io, Azure App Service, etc.—the critical pieces are an updated `.env`, a `npm start` entry point, and reachable SQL Server networking.
+
 ## Sample Data
 
 - Populate demo reservations and verification codes with `npm run seed`. The script removes prior `SAMPLE-*` records before inserting fresh data so it is safe to run repeatedly.

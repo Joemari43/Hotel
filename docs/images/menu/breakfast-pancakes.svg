@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320">
+  <defs>
+    <linearGradient id="pancakesBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8ecd8" />
+      <stop offset="100%" stop-color="#f5d2a8" />
+    </linearGradient>
+  </defs>
+  <rect width="480" height="320" fill="url(#pancakesBg)" />
+  <g opacity="0.28" fill="#e5b97d">
+    <circle cx="420" cy="60" r="90" />
+    <circle cx="80" cy="280" r="120" />
+  </g>
+  <g transform="translate(80 60)">
+    <ellipse cx="160" cy="190" rx="160" ry="46" fill="#c79a63" opacity="0.4" />
+    <g transform="translate(32 40)">
+      <ellipse cx="140" cy="160" rx="134" ry="34" fill="#f3c37a" stroke="#e0a860" stroke-width="6" />
+      <ellipse cx="140" cy="126" rx="124" ry="32" fill="#f7d29b" stroke="#e0a860" stroke-width="6" />
+      <ellipse cx="140" cy="94" rx="114" ry="30" fill="#fbe0b9" stroke="#e0a860" stroke-width="6" />
+      <ellipse cx="140" cy="66" rx="102" ry="28" fill="#fdf0d5" stroke="#e0a860" stroke-width="6" />
+      <path d="M140 24c40 0 60 16 60 30s-26 24-60 24-60-10-60-24 20-30 60-30z" fill="#f2ad27" />
+      <circle cx="140" cy="40" r="18" fill="#f6d678" />
+    </g>
+    <g fill="#d6654f">
+      <circle cx="220" cy="84" r="8" />
+      <circle cx="188" cy="100" r="9" />
+      <circle cx="240" cy="114" r="7" />
+      <circle cx="216" cy="128" r="8" />
+    </g>
+  </g>
+  <text
+    x="40"
+    y="60"
+    font-family="'Inter', Arial, sans-serif"
+    font-size="24"
+    font-weight="600"
+    fill="#a4582f"
+  >
+    Buttermilk Pancakes
+  </text>
+</svg>

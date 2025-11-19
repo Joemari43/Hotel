@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <defs>
+    <linearGradient id="ts-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5130a8" />
+      <stop offset="100%" stop-color="#7c43f6" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#ts-gradient)" />
+  <g fill="#ffffff" opacity="0.85">
+    <rect x="160" y="480" width="880" height="140" rx="24" />
+  </g>
+  <text x="190" y="560" font-family="Inter, sans-serif" font-size="68" fill="#ffffff" opacity="0.95">
+    Twin Suite
+  </text>
+  <text x="190" y="200" font-family="Inter, sans-serif" font-size="44" fill="#efe9ff" opacity="0.9">
+    Creative Lounge · Workspace · Harbor Light
+  </text>
+</svg>

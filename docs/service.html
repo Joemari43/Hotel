@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Harborview Hotel | Room Service Requests</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="navigation.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar__inner">
+        <a class="brand" href="/hotel">Harborview Hotel</a>
+        <button class="topbar__toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+          <span class="topbar__toggle-icon" aria-hidden="true"></span>
+          <span class="topbar__toggle-label">Menu</span>
+        </button>
+        <nav class="topbar__nav" id="site-nav">
+          <a href="/hotel">About</a>
+          <a href="/rooms">Rooms</a>
+          <a href="/order">Order</a>
+          <a href="/service" class="is-active">Service</a>
+          <a href="/admin">Staff Portal</a>
+          <a href="/book#booking">Book Now</a>
+        </nav>
+      </div>
+    </header>
+
+    <section class="service-hero">
+      <div class="service-hero__inner">
+        <p class="service-hero__eyebrow">Harborview Housekeeping &amp; Engineering</p>
+        <h1>We keep every suite shipshape.</h1>
+        <p class="service-hero__copy">
+          Request a fresh room reset or flag a maintenance concern. Our service crew will confirm your
+          request and coordinate the best time to step in.
+        </p>
+      </div>
+    </section>
+
+    <main class="service-main">
+      <section class="service-card">
+        <form id="service-request-form" class="service-form" novalidate>
+          <div class="form-grid">
+            <label class="form-field">
+              <span>Full name*</span>
+              <input type="text" id="service-name" name="fullName" maxlength="120" required />
+            </label>
+            <label class="form-field">
+              <span>Email address*</span>
+              <input type="email" id="service-email" name="email" maxlength="120" required />
+            </label>
+            <label class="form-field">
+              <span>Phone number*</span>
+              <input
+                type="tel"
+                id="service-phone"
+                name="phone"
+                maxlength="40"
+                placeholder="e.g. +63 917 555 0101"
+                required
+              />
+            </label>
+            <label class="form-field">
+              <span>Room number*</span>
+              <select id="service-room" name="roomNumber" required>
+                <option value="">Loading rooms…</option>
+              </select>
+            </label>
+          </div>
+
+          <fieldset class="service-choices">
+            <legend>What do you need?</legend>
+            <div class="service-choice-list">
+              <label class="choice-tile">
+                <input
+                  type="radio"
+                  name="requestType"
+                  value="housekeeping"
+                  checked
+                  aria-describedby="housekeeping-desc"
+                />
+                <span class="choice-label">Housekeeping</span>
+                <span class="choice-copy" id="housekeeping-desc">
+                  Fresh linens, turndown, or an in-room refresh.
+                </span>
+              </label>
+              <label class="choice-tile">
+                <input type="radio" name="requestType" value="maintenance" aria-describedby="maintenance-desc" />
+                <span class="choice-label">Maintenance</span>
+                <span class="choice-copy" id="maintenance-desc">
+                  Engineering support for lighting, HVAC, or fixtures.
+                </span>
+              </label>
+            </div>
+          </fieldset>
+
+          <section class="service-options">
+            <div class="service-options__group" id="housekeeping-options" data-type="housekeeping">
+              <h2>Popular housekeeping touches</h2>
+              <p class="text-muted">
+                Select everything you need—we’ll handle the rest. Add details if you have a special setup in mind.
+              </p>
+              <div class="service-checkbox-grid">
+                <label class="checkbox-tile">
+                  <input type="checkbox" value="Full room refresh" />
+                  <span>Full room refresh</span>
+                </label>
+                <label class="checkbox-tile">
+                  <input type="checkbox" value="Fresh linens &amp; pillows" />
+                  <span>Fresh linens &amp; pillows</span>
+                </label>
+                <label class="checkbox-tile">
+                  <input type="checkbox" value="Evening turndown" />
+                  <span>Evening turndown</span>
+                </label>
+                <label class="checkbox-tile">
+                  <input type="checkbox" value="Towels &amp; amenities restock" />
+                  <span>Towels &amp; amenities restock</span>
+                </label>
+                <label class="checkbox-tile">
+                  <input type="checkbox" value="Mini-bar refresh" />
+                  <span>Mini-bar refresh</span>
+                </label>
+                <label class="checkbox-tile">
+                  <input type="checkbox" value="Laundry pickup" />
+                  <span>Laundry pickup</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="service-options__group is-hidden" id="maintenance-options" data-type="maintenance">
+              <h2>Common engineering assists</h2>
+              <p class="text-muted">
+                Tell us what needs attention so engineering can arrive prepared with the right tools.
+              </p>
+              <div class="service-checkbox-grid">
+                <label class="checkbox-tile">
+                  <input type="checkbox" value="HVAC or thermostat issue" />
+                  <span>HVAC / thermostat</span>
+                </label>
+                <label class="checkbox-tile">
+                  <input type="checkbox" value="Lighting or power concern" />
+                  <span>Lighting or power</span>
+                </label>
+                <label class="checkbox-tile">
+                  <input type="checkbox" value="Plumbing or hot water issue" />
+                  <span>Plumbing</span>
+                </label>
+                <label class="checkbox-tile">
+                  <input type="checkbox" value="Appliance troubleshooting" />
+                  <span>Appliance help</span>
+                </label>
+                <label class="checkbox-tile">
+                  <input type="checkbox" value="Door or window concern" />
+                  <span>Doors &amp; windows</span>
+                </label>
+                <label class="checkbox-tile">
+                  <input type="checkbox" value="Tech setup assistance" />
+                  <span>Tech setup</span>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <label class="form-field">
+            <span>Brief summary*</span>
+            <input
+              type="text"
+              id="service-summary"
+              name="summary"
+              maxlength="160"
+              placeholder="e.g. Fresh towels and evening turndown"
+            />
+          </label>
+
+          <label class="form-field">
+            <span>Details for the team</span>
+            <textarea
+              id="service-details"
+              name="details"
+              rows="4"
+              maxlength="1200"
+              placeholder="Share preferred timing, access notes, or anything else we should know."
+            ></textarea>
+          </label>
+
+          <div class="form-grid">
+            <label class="form-field">
+              <span>Priority</span>
+              <select id="service-priority" name="priority">
+                <option value="normal">Standard</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </label>
+            <label class="form-field">
+              <span>Preferred time</span>
+              <input type="datetime-local" id="service-requested-for" name="requestedFor" />
+            </label>
+          </div>
+
+          <label class="form-field">
+            <span>Anything else?</span>
+            <textarea
+              id="service-instructions"
+              name="instructions"
+              rows="3"
+              maxlength="1200"
+              placeholder="Arrival instructions, sleeping baby notice, or other notes."
+            ></textarea>
+          </label>
+
+          <div id="service-feedback" class="form-feedback" aria-live="polite"></div>
+
+          <button type="submit" class="primary-btn">Send to Service Team</button>
+        </form>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer__inner">
+        <div>
+          <strong>Harborview Hotel</strong>
+          <p class="text-muted">Sunrise Cove, The Esplanade, Barangay Mabini, Batangas</p>
+        </div>
+        <div>
+          <strong>Front Desk</strong>
+          <p class="text-muted">+63 917 555 0110</p>
+          <p class="text-muted">stay@harborview.ph</p>
+        </div>
+        <div>
+          <strong>Housekeeping</strong>
+          <p class="text-muted">Dial 3 on your in-room phone or message concierge in the app.</p>
+        </div>
+      </div>
+      <p class="footer__copy">&copy; <span id="service-year"></span> Harborview Hospitality Inc.</p>
+    </footer>
+
+    <script src="service.js" defer></script>
+  </body>
+</html>
