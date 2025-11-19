@@ -1,4 +1,4 @@
-const roomGrid = document.getElementById("rooms-grid");
+ï»¿const roomGrid = document.getElementById("rooms-grid");
 const roomsError = document.getElementById("rooms-error");
 const yearEl = document.getElementById("year");
 
@@ -76,7 +76,7 @@ function buildRoomCard(room) {
   const preset = marketingPresets[room.name] || {};
   const imageUrl = preset.imageUrl || room.imageUrl || FALLBACK_IMAGE;
   const sleepsCount = room.sleeps != null ? Number(room.sleeps) : preset.sleeps;
-  const sleepsLabel = Number.isFinite(sleepsCount) ? `Sleeps ${sleepsCount}` : 'Sleeps —';
+  const sleepsLabel = Number.isFinite(sleepsCount) ? `Sleeps ${sleepsCount}` : 'Sleeps â€”';
   const rateLabel = room.baseRate != null ? `${formatPhp(room.baseRate)}/night` : 'Contact us for rates';
   const description =
     room.description && room.description.trim().length > 0
@@ -95,7 +95,7 @@ function buildRoomCard(room) {
         </div>
         <p>${escapeHtml(description)}</p>
         ${createAmenityChips(amenities)}
-        <a class="room-card__cta" href="/book#booking">Book this room</a>
+        <a class="room-card__cta" href="index.html#booking">Book this room</a>
       </div>
     </article>
   `;
@@ -108,6 +108,25 @@ function setRoomsError(message) {
   roomsError.textContent = message || "";
 }
 
+function getFallbackRooms() {
+  return Object.entries(marketingPresets).map(([name, preset]) => ({
+    name,
+    baseRate: preset.baseRate || null,
+    sleeps: preset.sleeps || null,
+    description: preset.description,
+    imageUrl: preset.imageUrl,
+  }));
+}
+
+async function fetchRoomTypes() {
+  const response = await fetch("/api/public/room-types");
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data?.message || "Unable to load rooms right now.");
+  }
+  return response.json();
+}
+
 async function loadRooms() {
   if (!roomGrid) {
     return;
@@ -116,26 +135,23 @@ async function loadRooms() {
   setRoomsError("Loading rooms...");
 
   try {
-    const response = await fetch("/api/public/room-types");
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      throw new Error(data?.message || "Unable to load rooms right now.");
-    }
-
-    const roomTypes = await response.json();
+    const roomTypes = await fetchRoomTypes();
     if (!Array.isArray(roomTypes) || roomTypes.length === 0) {
-      setRoomsError("Check back soon—our creative team is crafting new suites.");
-      return;
+      throw new Error("Check back soonâ€”our creative team is crafting new suites.");
     }
 
     const cards = roomTypes.map((room) => buildRoomCard(room)).join("");
     roomGrid.innerHTML = cards;
     setRoomsError("");
   } catch (error) {
-    console.error("Failed to load rooms", error);
-    setRoomsError(error.message || "Unable to load rooms right now.");
+    console.warn("Falling back to preset rooms", error);
+    const fallbackRooms = getFallbackRooms();
+    const cards = fallbackRooms.map((room) => buildRoomCard(room)).join("");
+    roomGrid.innerHTML = cards;
+    setRoomsError("Showing preset suites. Connect the backend for live inventory.");
   }
 }
+
 
 function init() {
   if (yearEl) {
@@ -145,3 +161,4 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
