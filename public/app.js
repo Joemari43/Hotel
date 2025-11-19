@@ -16,6 +16,8 @@ let countdownTimer = null;
 let countdownRemaining = 0;
 let minimumDeposit = 2000;
 let gcashIntegrationEnabled = false;
+const harborviewFetch =
+  typeof window.harborviewFetch === 'function' ? window.harborviewFetch : window.fetch.bind(window);
 
 if (yearEl) {
   yearEl.textContent = new Date().getFullYear();
@@ -72,7 +74,7 @@ bookingForm.addEventListener('submit', async (event) => {
     submitBtn.textContent = 'Processing...';
     renderFeedback('info', 'Submitting your booking...');
 
-    const response = await fetch('/api/bookings', {
+    const response = await harborviewFetch('/api/bookings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formValues),
@@ -135,7 +137,7 @@ async function requestVerificationCode({ fullName, email, phone }) {
     sendCodeBtn.textContent = 'Sending...';
     renderFeedback('info', 'Sending verification code...');
 
-    const response = await fetch('/api/verification/request-code', {
+  const response = await harborviewFetch('/api/verification/request-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fullName, email, phone }),
@@ -235,7 +237,7 @@ function updateDepositUI() {
 
 async function loadConfiguration() {
   try {
-    const response = await fetch('/api/config');
+    const response = await harborviewFetch('/api/config');
     if (!response.ok) {
       return;
     }
@@ -280,7 +282,7 @@ async function generateGcashPaymentLink() {
   renderFeedback('info', 'Generating a secure GCash payment link...');
 
   try {
-    const response = await fetch('/api/payments/gcash', {
+    const response = await harborviewFetch('/api/payments/gcash', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

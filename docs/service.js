@@ -18,6 +18,8 @@ const SERVICE_SELECTIONS = {
   housekeeping: housekeepingGroup ? Array.from(housekeepingGroup.querySelectorAll('input[type="checkbox"]')) : [],
   maintenance: maintenanceGroup ? Array.from(maintenanceGroup.querySelectorAll('input[type="checkbox"]')) : [],
 };
+const harborviewFetch =
+  typeof window.harborviewFetch === 'function' ? window.harborviewFetch : window.fetch.bind(window);
 
 if (serviceYear) {
   serviceYear.textContent = new Date().getFullYear();
@@ -83,7 +85,7 @@ async function handleSubmit(event) {
   setFeedback('info', 'Sending your request...');
 
   try {
-    const response = await fetch('/api/orders', {
+    const response = await harborviewFetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -224,7 +226,7 @@ async function loadRoomOptions() {
   roomSelect.disabled = true;
   roomSelect.innerHTML = '<option value="">Loading rooms…</option>';
 
-  const response = await fetch('/api/rooms/inventory');
+  const response = await harborviewFetch('/api/rooms/inventory');
   if (!response.ok) {
     throw new Error('Unable to fetch room list.');
   }

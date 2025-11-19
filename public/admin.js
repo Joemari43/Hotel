@@ -12,6 +12,8 @@ const ROLE_HOME_SECTIONS = {
   restaurant: 'order-management',
 };
 const SERVICE_PORTAL_BASE_PATH = '/service-team';
+const harborviewFetch =
+  typeof window.harborviewFetch === 'function' ? window.harborviewFetch : window.fetch.bind(window);
 
 
 const loginPanel = document.getElementById('login-panel');
@@ -543,7 +545,7 @@ async function handleLogin(event) {
     loginForm.querySelector('button[type="submit"]').disabled = true;
     setFeedback(loginFeedback, 'info', 'Signing in...');
 
-    const response = await fetch('/api/auth/login', {
+    const response = await harborviewFetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -1226,7 +1228,7 @@ async function handleCheckoutClick(event) {
 
 async function initializeConfig() {
 
-  const response = await fetch('/api/config');
+  const response = await harborviewFetch('/api/config');
 
   if (!response.ok) {
 
@@ -5199,7 +5201,7 @@ async function authFetch(url, options = {}) {
 
   }
 
-  return fetch(url, { ...options, headers });
+  return harborviewFetch(url, { ...options, headers });
 
 }
 

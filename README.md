@@ -166,6 +166,11 @@ If you prefer CI to handle publishing, keep the new workflow `.github/workflows/
 
 Because Pages pulls the artifact straight from CI, you don’t have to commit `docs/` for publishing—only when you need a local preview. The workflow uses Node.js 18; adjust the version or trigger paths to match your process.
 
+### Pointing the static site at your backend
+
+- Update `public/config.js` with the public URL of your deployed Node/Express API (e.g., Render). The helper auto-detects GitHub Pages (`*.github.io`) and rewrites calls like `/api/bookings` to `https://your-backend-url.example.com/api/bookings`. Locally it falls back to relative URLs so `npm run dev` continues to work.
+- If you need to override the URL dynamically, set `window.HARBORVIEW_CONFIG = { apiBaseUrl: 'https://...' }` before `config.js` loads, or edit the default constant directly.
+
 ## Hosting the Node/Express Backend (Render example)
 
 1. **Rotate secrets locally**

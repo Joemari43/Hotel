@@ -7,6 +7,8 @@ const ROLE_DEPARTMENT = {
   housekeeping: 'housekeeping',
   maintenance: 'engineering',
 };
+const harborviewFetch =
+  typeof window.harborviewFetch === 'function' ? window.harborviewFetch : window.fetch.bind(window);
 
 function normalizeRole(value) {
   if (typeof value !== 'string') {
@@ -165,7 +167,7 @@ async function handleLogin(event) {
     loginForm.querySelector('button[type="submit"]').disabled = true;
     setFeedback(loginFeedback, 'info', 'Signing in...');
 
-    const response = await fetch('/api/auth/login', {
+    const response = await harborviewFetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
@@ -583,7 +585,7 @@ async function authFetch(url, options = {}) {
   const headers = new Headers(options.headers || {});
   headers.set('Authorization', `Bearer ${token}`);
 
-  const response = await fetch(url, { ...options, headers });
+  const response = await harborviewFetch(url, { ...options, headers });
 
   if (response.status === 401) {
     clearAuth();

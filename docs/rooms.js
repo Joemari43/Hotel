@@ -1,6 +1,7 @@
 ﻿const roomGrid = document.getElementById("rooms-grid");
 const roomsError = document.getElementById("rooms-error");
 const yearEl = document.getElementById("year");
+const harborviewFetch = typeof window.harborviewFetch === "function" ? window.harborviewFetch : window.fetch.bind(window);
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1505691723518-36a5ac3be353?auto=format&fit=crop&w=1200&q=80";
 
@@ -119,7 +120,7 @@ function getFallbackRooms() {
 }
 
 async function fetchRoomTypes() {
-  const response = await fetch("/api/public/room-types");
+  const response = await harborviewFetch("/api/public/room-types");
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
     throw new Error(data?.message || "Unable to load rooms right now.");
@@ -161,4 +162,5 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
 

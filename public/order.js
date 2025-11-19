@@ -21,6 +21,8 @@ const MENU_TYPES = new Set(['food', 'amenity']);
 const defaultItemsHelpText = orderItemsHelp ? orderItemsHelp.textContent.trim() : '';
 
 const itemsState = [];
+const harborviewFetch =
+  typeof window.harborviewFetch === 'function' ? window.harborviewFetch : window.fetch.bind(window);
 
 if (yearEl) {
   yearEl.textContent = new Date().getFullYear();
@@ -109,7 +111,7 @@ async function loadRoomOptions() {
   roomSelect.disabled = true;
   roomSelect.innerHTML = '<option value="">Loading rooms…</option>';
 
-  const response = await fetch('/api/rooms/inventory');
+  const response = await harborviewFetch('/api/rooms/inventory');
   if (!response.ok) {
     throw new Error('Unable to fetch room list.');
   }
@@ -194,7 +196,7 @@ async function handleSubmitOrder(event) {
   setFeedback('info', 'Sending your request...');
 
   try {
-    const response = await fetch('/api/orders', {
+    const response = await harborviewFetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
